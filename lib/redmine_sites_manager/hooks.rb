@@ -10,23 +10,44 @@ module RedmineSitesManager
     # Hook para agregar el campo de búsqueda de sitios en el formulario de incidencias
     def view_issues_form_details_top(context={})
     return '' unless context[:issue]
+
+    translation_label = l('plugin_sites_manager.search.label')
+    translation_placeholder = l('plugin_sites_manager.search.placeholder')
     
     html = <<-HTML
       <div class="sites-search-container">
-        <p>
-          <label>#{l('plugin_sites_manager.search.label')}</label>
+        <div class="field">
+          <label>#{translation_label}</label>
           <input type="text" 
                  id="sites-search-field" 
                  class="sites-autocomplete" 
-                 placeholder="#{l('plugin_sites_manager.search.placeholder')}"
+                 placeholder="#{translation_placeholder}"
                  autocomplete="off" />
-          <span class="sites-clear-btn" 
-                title="#{l('plugin_sites_manager.sites.clear_selection')}">×</span>
-        </p>
+          <span class="sites-clear-btn">×</span>
+        </div>
       </div>
     HTML
     
     html.html_safe
+  end
+
+  render_on :view_layouts_base_html_head do
+    javascript_tag do
+      <<-JS
+      $(document).ready(function() {
+        var translations = {
+          searchLabel: '#{j l('plugin_sites_manager.search.label')}',
+          searchPlaceholder: '#{j l('plugin_sites_manager.search.placeholder')}',
+          noResults: '#{j l('plugin_sites_manager.search.no_results')}',
+          searching: '#{j l('plugin_sites_manager.search.searching')}'
+        };
+
+        if ($('#sites-search-field').length) {
+          $('#sites-search-field').attr('placeholder', translations.searchPlaceholder);
+        }
+      });
+      JS
+    end
   end
 
     # Hook para agregar campos personalizados adicionales específicos de sitios
