@@ -153,171 +153,130 @@
   </style>
 
   <script type="text/javascript">
-    $(function() {
-      const CUSTOM_FIELDS_MAPPING = {
-        's_id': 1,
-        'nom_sitio': 5,
-        'identificador': 8,
-        'depto': 10,
-        'municipio': 2,
-        'direccion': 3,
-        'jerarquia_definitiva': 6,
-        'fijo_variable': 7,
-        'coordinador': 9
+  $(function() {
+    const CUSTOM_FIELDS_MAPPING = {
+      's_id': 1,
+      'nom_sitio': 5,
+      'identificador': 8,
+      'depto': 10,
+      'municipio': 2,
+      'direccion': 3,
+      'jerarquia_definitiva': 6,
+      'fijo_variable': 7,
+      'coordinador': 9
+    };
+
+    // Cargar datos de sitios
+    const sitesData = <%= raw FlmSite.all.map { |site| {
+      id: site.id,
+      s_id: site.s_id,
+      nom_sitio: site.nom_sitio,
+      identificador: site.identificador,
+      depto: site.depto,
+      municipio: site.municipio,
+      direccion: site.direccion,
+      jerarquia_definitiva: site.jerarquia_definitiva,
+      fijo_variable: site.fijo_variable,
+      coordinador: site.coordinador
+    }}.to_json %>;
+
+    if (typeof initializeSitesSearch === 'undefined') {
+      window.initializeSitesSearch = function() {
+        const searchField = $('#sites-search-field');
+        const clearButton = $('.sites-clear-btn');
+        
+        if (!searchField.length) return;
+
+        // Configurar autocompletado
+        searchField.autocomplete({
+          source: function(request, response) {
+            const term = request.term.toLowerCase();
+            const results = sitesData.filter(site => 
+              site.s_id.toLowerCase().includes(term) ||
+              site.nom_sitio.toLowerCase().includes(term) ||
+              (site.identificador && site.identificador.toLowerCase().includes(term)) ||
+              (site.municipio && site.municipio.toLowerCase().includes(term)) ||
+              (site.direccion && site.direccion.toLowerCase().includes(term)) ||
+              (site.depto && site.depto.toLowerCase().includes(term))
+            ).slice(0, 10);
+
+            response(results.map(site => ({
+              label: `${site.s_id} - ${site.nom_sitio}`,
+              value: `${site.s_id} - ${site.nom_sitio}`,
+              site_data: site
+            })));
+          },
+          minLength: 2,
+          select: function(event, ui) {
+            if (ui.item) {
+              updateFields(ui.item.site_data);
+            }
+            return false;
+          }
+        }).autocomplete('instance')._renderItem = function(ul, item) {
+          return $('<li>')
+            .append(`
+              <div class="ui-menu-item-wrapper">
+                <div class="site-result">
+                  <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
+                  <small>
+                    ${item.site_data.municipio || ''}
+                    ${item.site_data.direccion ? ` - ${item.site_data.direccion}` : ''}
+                  </small>
+                </div>
+              </div>
+            `)
+            .appendTo(ul);
+        };
+
+        // Manejar botón de limpiar
+        clearButton.on('click', function() {
+          clearFields();
+          searchField.val('').focus();
+        });
+
+        searchField.on('input', function() {
+          clearButton.toggle(Boolean($(this).val()));
+        }).trigger('input');
       };
 
-      if (typeof initializeSitesSearch === 'undefined') {
-        window.sitesManagerSettings = {
-          searchUrl: '<%= j(url_for(controller: "sites", action: "search", format: :json)) %>',
-          translations: {
-            noResults: '<%= j l("plugin_sites_manager.search.no_results") %>',
-            searching: '<%= j l("plugin_sites_manager.search.searching") %>',
-            placeholder: '<%= j l("plugin_sites_manager.search.placeholder") %>'
-          },
-          csrfToken: $('meta[name="csrf-token"]').attr('content')
-        };
-
-        window.initializeSitesSearch = function() {
-          const searchField = $('#sites-search-field');
-          const clearButton = $('.sites-clear-btn');
+      // Función para actualizar campos
+      function updateFields(data) {
+        Object.entries(CUSTOM_FIELDS_MAPPING).forEach(([field, fieldId]) => {
+          if (!data[field]) return;
           
-          if (!searchField.length) return;
+          const element = $(`#issue_custom_field_values_${fieldId}`);
+          if (!element.length) return;
 
-          // Configuración global de AJAX
-          $.ajaxSetup({
-            headers: {
-              'X-CSRF-Token': window.sitesManagerSettings.csrfToken
-            }
-          });
+          element
+            .val(data[field])
+            .trigger('change')
+            .removeClass('campo-variable campo-fijo');
 
-          // Configuración del campo de búsqueda
-          searchField
-            .attr('placeholder', window.sitesManagerSettings.translations.placeholder)
-            .autocomplete({
-              source: function(request, response) {
-                searchField.addClass('loading');
-                $.ajax({
-                  url: window.sitesManagerSettings.searchUrl,
-                  method: 'GET',
-                  dataType: 'json',
-                  data: { 
-                    term: request.term,
-                    authenticity_token: window.sitesManagerSettings.csrfToken
-                  },
-                  success: function(data) {
-                    searchField.removeClass('loading');
-                    response(data);
-                  },
-                  error: function(xhr, status, error) {
-                    searchField.removeClass('loading');
-                    console.error('Error en búsqueda:', error);
-                    response([]);
-                  }
-                });
-              },
-              minLength: 2,
-              delay: 300,
-              autoFocus: true,
-              messages: {
-                noResults: window.sitesManagerSettings.translations.noResults,
-                results: function() {}
-              },
-              select: function(event, ui) {
-                if (ui.item && ui.item.site_data) {
-                  updateFields(ui.item.site_data);
-                  $(this).val(ui.item.site_data.s_id + ' - ' + ui.item.site_data.nom_sitio);
-                }
-                return false;
-              }
-            });
+          if (field === 'fijo_variable') {
+            element.addClass(data[field].toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
+          }
+        });
+      }
 
-          // Renderizado personalizado de resultados
-          searchField.autocomplete('instance')._renderItem = function(ul, item) {
-            if (!item.site_data) return $('<li>').appendTo(ul);
-            
-            return $('<li>')
-              .append(`
-                <div class="ui-menu-item-wrapper">
-                  <div class="site-result">
-                    <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
-                    <small>
-                      ${item.site_data.municipio || ''}
-                      ${item.site_data.direccion ? ` - ${item.site_data.direccion}` : ''}
-                    </small>
-                  </div>
-                </div>
-              `)
-              .appendTo(ul);
-          };
-
-          // Manejo del botón de limpiar
-          clearButton.on('click', function() {
-            clearFields();
-            searchField.val('').focus();
-          });
-
-          // Toggle del botón de limpiar
-          searchField.on('input', function() {
-            clearButton.toggle(Boolean($(this).val()));
-          }).trigger('input');
-
-          // Observar cambios en campos personalizados
-          $('[id^="issue_custom_field_values_"]').on('change', function() {
-            const fieldId = $(this).attr('id').replace('issue_custom_field_values_', '');
-            handleCustomFieldChange(fieldId, $(this).val());
-          });
-        };
-
-        // Función para actualizar campos
-        function updateFields(data) {
-          Object.entries(CUSTOM_FIELDS_MAPPING).forEach(([field, fieldId]) => {
-            if (!data[field]) return;
-            
-            const element = $(`#issue_custom_field_values_${fieldId}`);
-            if (!element.length) return;
-
+      // Función para limpiar campos
+      function clearFields() {
+        Object.values(CUSTOM_FIELDS_MAPPING).forEach(fieldId => {
+          const element = $(`#issue_custom_field_values_${fieldId}`);
+          if (element.length) {
             element
-              .val(data[field])
+              .val('')
               .trigger('change')
               .removeClass('campo-variable campo-fijo');
-
-            if (field === 'fijo_variable') {
-              element.addClass(data[field].toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
-            }
-          });
-        }
-
-        // Función para limpiar campos
-        function clearFields() {
-          Object.values(CUSTOM_FIELDS_MAPPING).forEach(fieldId => {
-            const element = $(`#issue_custom_field_values_${fieldId}`);
-            if (element.length) {
-              element
-                .val('')
-                .trigger('change')
-                .removeClass('campo-variable campo-fijo');
-            }
-          });
-        }
-
-        // Función para manejar cambios en campos
-        function handleCustomFieldChange(fieldId, value) {
-          const field = Object.entries(CUSTOM_FIELDS_MAPPING)
-            .find(([key, val]) => val.toString() === fieldId)?.[0];
-          
-          if (field === 'fijo_variable') {
-            const element = $(`#issue_custom_field_values_${fieldId}`);
-            element
-              .removeClass('campo-variable campo-fijo')
-              .addClass(value.toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
           }
-        }
+        });
       }
+    }
 
-      // Inicialización automática
-      if ($('#issue-form').length) {
-        initializeSitesSearch();
-      }
-    });
-  </script>
+    // Inicializar si estamos en un formulario de incidencia
+    if ($('#issue-form').length) {
+      initializeSitesSearch();
+    }
+  });
+</script>
 <% end %>
