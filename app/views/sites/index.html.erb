@@ -20,11 +20,20 @@
       <tr>
         <th><%= l('plugin_sites_manager.field_s_id') %></th>
         <th><%= l('plugin_sites_manager.field_nom_sitio') %></th>
+        <th><%= l('plugin_sites_manager.field_depto') %></th>
         <th><%= l('plugin_sites_manager.field_municipio') %></th>
         <th><%= l('plugin_sites_manager.field_direccion') %></th>
-        <th><%= l('plugin_sites_manager.field_jerarquia') %></th>
+        <th><%= l('plugin_sites_manager.field_identificador') %></th>
+        <th><%= l('plugin_sites_manager.field_jerarquia_definitiva') %></th>
         <th><%= l('plugin_sites_manager.field_fijo_variable') %></th>
-        <th></th>
+        <th><%= l('plugin_sites_manager.field_coordinador') %></th>
+        <th><%= l('plugin_sites_manager.field_campo_adicional_1') %></th>
+        <th><%= l('plugin_sites_manager.field_campo_adicional_2') %></th>
+        <th><%= l('plugin_sites_manager.field_campo_adicional_3') %></th>
+        <th><%= l('plugin_sites_manager.field_campo_adicional_4') %></th>
+        <th><%= l('plugin_sites_manager.field_campo_adicional_5') %></th>
+        <th><%= l(:label_status) %></th>
+        <th><%= l(:button_actions) %></th>
       </tr>
     </thead>
     <tbody>
@@ -32,16 +41,25 @@
         <tr>
           <td><%= h(site.s_id) %></td>
           <td><%= h(site.nom_sitio) %></td>
+          <td><%= h(site.depto) %></td>
           <td><%= h(site.municipio) %></td>
           <td><%= h(site.direccion) %></td>
-          <td><%= h(site.jerarquia) %></td>
+          <td><%= h(site.identificador) %></td>
+          <td><%= h(site.jerarquia_definitiva) %></td>
           <td><%= h(site.fijo_variable) %></td>
+          <td><%= h(site.coordinador) %></td>
+          <td><%= h(site.campo_adicional_1) %></td>
+          <td><%= h(site.campo_adicional_2) %></td>
+          <td><%= h(site.campo_adicional_3) %></td>
+          <td><%= h(site.campo_adicional_4) %></td>
+          <td><%= h(site.campo_adicional_5) %></td>
+          <td><%= h(site.active ? 'Activo' : 'Inactivo') %></td>
           <td class="buttons">
             <%= link_to l(:button_edit), edit_site_path(site), class: 'icon icon-edit' %>
             <%= link_to l(:button_delete), site_path(site),
-                    method: :delete,
-                    data: { confirm: l(:text_are_you_sure) },
-                    class: 'icon icon-del' %>
+                        method: :delete,
+                        data: { confirm: l(:text_are_you_sure) },
+                        class: 'icon icon-del' %>
           </td>
         </tr>
       <% end %>
