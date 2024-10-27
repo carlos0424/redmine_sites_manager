@@ -35,8 +35,10 @@ module RedmineSitesManager
 
     # Hook para agregar campos personalizados adicionales específicos de sitios
     def view_custom_fields_form_upper_box(context={})
-      return '' unless context[:custom_field]
-
+    return '' unless context[:custom_field]
+    
+    # Verificar si el campo personalizado tiene el método `site_related`
+    if context[:custom_field].respond_to?(:site_related)
       <<-HTML.html_safe
         <div class="site-related-fields">
           <p>
@@ -50,7 +52,12 @@ module RedmineSitesManager
           </p>
         </div>
       HTML
+    else
+      # Si no tiene `site_related`, retorna un string vacío sin renderizar contenido adicional
+      ''
     end
+  end
+  
 
     # Hook para agregar campos personalizados en la vista de detalles de incidencia
     def view_issues_show_details_bottom(context={})
