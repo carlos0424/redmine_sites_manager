@@ -76,25 +76,27 @@ class SitesController < ApplicationController
   private
 
   def edit
+    # La acción existe pero está vacía porque usamos @site que ya está cargado
   end
 
   def update
     respond_to do |format|
-      if @site.update(process_site_params)
-        format.html do
+      if @site.update(site_params)
+        format.html {
           flash[:notice] = l(:notice_successful_update)
           redirect_to sites_path
-        end
-        format.json { render json: @site.to_json_for_details }
+        }
+        format.json { render json: @site }
       else
         load_site_collections
         format.html { render :edit }
-        format.json { render json: { errors: @site.errors.full_messages }, status: :unprocessable_entity }
+        format.json { render json: @site.errors, status: :unprocessable_entity }
       end
     end
   end
 
   private
+
 
   def destroy
     if @site.destroy
@@ -199,7 +201,7 @@ class SitesController < ApplicationController
       :campo_adicional_4, :campo_adicional_5
     )
   end
-
+  
   def process_site_params
     processed_params = site_params.to_h
     
