@@ -103,9 +103,6 @@ class SitesController < ApplicationController
   end
 
   def search
-    return render_403 unless User.current.logged?
-  
-    term = params[:term].to_s.strip.downcase
     @sites = FlmSite.where(
       "LOWER(s_id) LIKE :term OR 
        LOWER(nom_sitio) LIKE :term OR 
@@ -113,15 +110,15 @@ class SitesController < ApplicationController
        LOWER(municipio) LIKE :term OR 
        LOWER(direccion) LIKE :term OR 
        LOWER(depto) LIKE :term", 
-      term: "%#{term}%"
+      term: "%#{params[:term].downcase}%"
     ).limit(10)
-  
+
     respond_to do |format|
       format.json { 
         render json: @sites.map { |site| 
           {
             id: site.id,
-            label: "#{site.s_id} - #{site.nom_sitio} (#{site.municipio})",
+            label: "#{site.s_id} - #{site.nom_sitio}",
             value: site.nom_sitio,
             site_data: {
               s_id: site.s_id,
@@ -139,6 +136,7 @@ class SitesController < ApplicationController
       }
     end
   end
+end
 
   def toggle_status
     respond_to do |format|

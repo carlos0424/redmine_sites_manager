@@ -1,7 +1,7 @@
 RedmineApp::Application.routes.draw do
   resources :sites do
     collection do
-      get 'search'
+      get '/sites/search', controller: 'sites', action: 'search'
       post 'import'
       get 'download_template'
       post 'bulk_update'

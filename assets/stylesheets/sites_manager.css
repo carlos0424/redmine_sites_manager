@@ -2,4 +2,51 @@
 .site-form .form-field {
     margin-bottom: 1em;
   }
+  .sites-search-container {
+    position: relative;
+    margin-bottom: 15px;
+  }
   
+  .sites-autocomplete {
+    width: 100%;
+    padding: 6px 30px 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  .clear-site-search {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    padding: 4px;
+  }
+  
+  .clear-site-search:hover {
+    color: #333;
+  }
+  
+  .ui-autocomplete {
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    border: 1px solid #ccc;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .autocomplete-item {
+    padding: 5px 8px;
+  }
+  
+  .autocomplete-item strong {
+    display: block;
+    color: #333;
+  }
+  
+  .autocomplete-item small {
+    color: #666;
+    font-size: 0.9em;
+  }
