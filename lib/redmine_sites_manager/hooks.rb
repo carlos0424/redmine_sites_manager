@@ -22,7 +22,6 @@ module RedmineSitesManager
     html.html_safe
   end
 end
-end
 
     # Hook para agregar campos personalizados adicionales específicos de sitios
     def view_custom_fields_form_upper_box(context={})
