@@ -13,8 +13,8 @@ module SitesHelper
 
   def site_fijo_variable_options
     [
-      [l('plugin_sites_manager.fijo_variable.fijo'), 'Fijo'],
-      [l('plugin_sites_manager.fijo_variable.variable'), 'Variable']
+      [l('plugin_sites_manager.fijo_variable.fijo'), 'FIJO'],
+      [l('plugin_sites_manager.fijo_variable.variable'), 'VARIABLE']
     ]
   end
 
