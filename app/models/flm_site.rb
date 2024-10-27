@@ -181,4 +181,32 @@ attr_accessible :s_id,
     self.s_id = s_id.to_s.strip.upcase
     self.s_id = "S#{s_id}" if s_id =~ /^\d+$/
   end
+
+  def find_coordinador_user
+    return nil if coordinador.blank?
+    @coordinador_role ||= Role.find_by(name: 'Coordinador')
+    return nil unless @coordinador_role
+
+    User.active
+        .joins(:members => :roles)
+        .where(roles: { id: @coordinador_role.id })
+        .where("CONCAT(firstname, ' ', lastname) LIKE ?", "%#{coordinador}%")
+        .first
+  end
+
+  def coordinador_id
+    find_coordinador_user&.id
+  end
+
+  def self.coordinadores_collection
+    role = Role.find_by(name: 'Coordinador')
+    return [] unless role
+
+    User.active
+        .joins(:members => :roles)
+        .where(roles: { id: role.id })
+        .distinct
+        .order(:firstname)
+        .map { |u| [u.name, u.id.to_s] }
+  end
 end

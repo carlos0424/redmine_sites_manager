@@ -178,13 +178,15 @@ class SitesController < ApplicationController
     @jerarquias = FlmSite.distinct.pluck(:jerarquia_definitiva).compact.sort
     
     # Obtener usuarios con rol coordinador
-    coordinador_role = Role.find_by(name: 'Coordinador')
-    @coordinadores = User.active.joins(:members => :roles)
-                        .where(roles: { id: coordinador_role.id })
+    @coordinador_role ||= Role.find_by(name: 'Coordinador')
+    @coordinadores = User.active
+                        .joins(:members => :roles)
+                        .where(roles: { id: @coordinador_role.id })
                         .distinct
                         .order(:firstname)
+                        .map { |u| [u.name, u.id.to_s] }  # Mapear a [nombre, id]
   end
-
+  
   def site_params
     params.require(:flm_site).permit(
       :s_id, :depto, :municipio, :nom_sitio, :direccion, :identificador,
@@ -209,7 +211,18 @@ class SitesController < ApplicationController
   end
 
   def format_sites_for_json(sites)
-    sites.map { |site| 
+    coordinador_role = Role.find_by(name: 'Coordinador')
+    
+    sites.map do |site|
+      # Buscar el ID del coordinador
+      coordinador_user = if site.coordinador.present?
+        User.active
+            .joins(:members => :roles)
+            .where(roles: { id: coordinador_role.id })
+            .where("CONCAT(firstname, ' ', lastname) LIKE ?", "%#{site.coordinador}%")
+            .first
+      end
+  
       {
         id: site.id,
         label: "#{site.s_id} - #{site.nom_sitio}",
@@ -223,12 +236,12 @@ class SitesController < ApplicationController
           direccion: site.direccion,
           jerarquia_definitiva: site.jerarquia_definitiva,
           fijo_variable: site.fijo_variable,
-          coordinador: site.coordinador,
+          coordinador: coordinador_user&.id.to_s,  # Enviamos el ID del usuario
           electrificadora: site.electrificadora,
           nic: site.nic
         }
       }
-    }
+    end
   end
 
   def build_site_query
