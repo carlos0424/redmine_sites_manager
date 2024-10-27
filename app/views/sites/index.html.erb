@@ -9,7 +9,7 @@
   <fieldset>
     <legend><%= l(:label_filter_plural) %></legend>
     <label><%= l('plugin_sites_manager.sites.search') %>:</label>
-    <%= text_field_tag :search, params[:search], size: 30 %>
+    <%= text_field_tag :search, params[:search], size: 30, placeholder: l('plugin_sites_manager.sites.search_placeholder') %>
     <%= submit_tag l(:button_apply), class: 'button-small', name: nil %>
   </fieldset>
 <% end %>
@@ -18,13 +18,19 @@
   <table class="list sites">
     <thead>
       <tr>
-        <th><%= l('plugin_sites_manager.field_s_id') %></th>
-        <th><%= l('plugin_sites_manager.field_nom_sitio') %></th>
-        <th><%= l('plugin_sites_manager.field_municipio') %></th>
-        <th><%= l('plugin_sites_manager.field_direccion') %></th>
-        <th><%= l('plugin_sites_manager.field_identificador') %></th>
-        <th><%= l('plugin_sites_manager.field_coordinador') %></th>
-        <!-- Agregamos más columnas según lo necesario -->
+        <th><%= l('plugin_sites_manager.fields.s_id') %></th>
+        <th><%= l('plugin_sites_manager.fields.nom_sitio') %></th>
+        <th><%= l('plugin_sites_manager.fields.municipio') %></th>
+        <th><%= l('plugin_sites_manager.fields.direccion') %></th>
+        <th><%= l('plugin_sites_manager.fields.identificador') %></th>
+        <th><%= l('plugin_sites_manager.fields.jerarquia_definitiva') %></th>
+        <th><%= l('plugin_sites_manager.fields.fijo_variable') %></th>
+        <th><%= l('plugin_sites_manager.fields.coordinador') %></th>
+        <th><%= l('plugin_sites_manager.fields.campo_adicional_1') %></th>
+        <th><%= l('plugin_sites_manager.fields.campo_adicional_2') %></th>
+        <th><%= l('plugin_sites_manager.fields.campo_adicional_3') %></th>
+        <th><%= l('plugin_sites_manager.fields.campo_adicional_4') %></th>
+        <th><%= l('plugin_sites_manager.fields.campo_adicional_5') %></th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -36,20 +42,27 @@
           <td><%= h(site.municipio) %></td>
           <td><%= h(site.direccion) %></td>
           <td><%= h(site.identificador) %></td>
+          <td><%= h(site.jerarquia_definitiva) %></td>
+          <td><%= h(site.fijo_variable) %></td>
           <td><%= h(site.coordinador) %></td>
-          <!-- Agregamos más campos si es necesario -->
+          <td><%= h(site.campo_adicional_1) %></td>
+          <td><%= h(site.campo_adicional_2) %></td>
+          <td><%= h(site.campo_adicional_3) %></td>
+          <td><%= h(site.campo_adicional_4) %></td>
+          <td><%= h(site.campo_adicional_5) %></td>
           <td class="buttons">
             <%= link_to l(:button_edit), edit_site_path(site), class: 'icon icon-edit' %>
             <%= link_to l(:button_delete), site_path(site),
-                    method: :delete,
-                    data: { confirm: l(:text_are_you_sure) },
-                    class: 'icon icon-del' %>
+                        method: :delete,
+                        data: { confirm: l(:text_are_you_sure) },
+                        class: 'icon icon-del' %>
           </td>
         </tr>
       <% end %>
     </tbody>
   </table>
 </div>
+
 <span class="pagination"><%= pagination_links_full @site_pages, @site_count %></span>
 
 <style>

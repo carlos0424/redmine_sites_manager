@@ -1,8 +1,9 @@
 require 'redmine'
 I18n.load_path += Dir[File.join(File.dirname(__FILE__), 'config', 'locales', '*.yml')]
 
-# Forzar el uso del idioma español
-I18n.locale = :es
+# Forzar el uso del idioma español en Redmine
+I18n.default_locale = :es
+I18n.reload!  # Forzar la recarga de las traducciones
 
 Redmine::Plugin.register :redmine_sites_manager do
   name I18n.t('plugin_sites_manager.name', locale: :es, default: 'Gestor de Sitios FLM')
@@ -10,13 +11,11 @@ Redmine::Plugin.register :redmine_sites_manager do
   description I18n.t('plugin_sites_manager.description', locale: :es, default: 'Plugin para gestión de sitios FLM')
   version '1.0.0'
 
-  # Agregar enlace en el menú de administración
   menu :admin_menu, :sites_manager, 
-       { controller: 'sites', action: 'index' },
-       caption: I18n.t('plugin_sites_manager.sites.title', locale: :es, default: 'Gestión de Sitios'),
+       { controller: 'settings', action: 'plugin', id: 'redmine_sites_manager' },
+       caption: I18n.t('plugin_sites_manager.name', locale: :es, default: 'Gestor de Sitios FLM'),
        html: { class: 'icon icon-package' }
 
-  # Configuración del plugin en la sección de administración de configuración de plugins
   settings default: {
     'custom_fields_mapping' => {
       'sitio' => '',
