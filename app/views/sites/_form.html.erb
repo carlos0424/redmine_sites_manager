@@ -54,10 +54,7 @@
 <div class="splitcontentright">
   <p>
     <%= f.label :coordinador, l('plugin_sites_manager.fields.coordinador') %>
-    <%= f.select :coordinador,
-        @coordinadores,
-        { include_blank: true },
-        { class: 'select2', required: true } %>
+    <%= f.select :coordinador, options_for_select(@coordinadores, @site.coordinador), { include_blank: true }, class: 'select2' %>
   </p>
 </div>
 

@@ -78,7 +78,9 @@ class SitesController < ApplicationController
   def edit
   end
 
-  def actualizar  # Cambiado de update a actualizar
+  def update
+    Rails.logger.info "Update params: #{params.inspect}"  # Para debug
+    
     if @site.update(site_params)
       flash[:notice] = l(:notice_successful_update)
       redirect_to sites_path
@@ -86,6 +88,11 @@ class SitesController < ApplicationController
       load_site_collections
       render :edit
     end
+  rescue => e
+    Rails.logger.error "Update error: #{e.message}"  # Para debug
+    flash[:error] = e.message
+    load_site_collections
+    render :edit
   end
 
   private
@@ -182,9 +189,8 @@ class SitesController < ApplicationController
                         .where(roles: { id: @coordinador_role.id })
                         .distinct
                         .order(:firstname)
-                        .map { |u| [u.name, u.id.to_s] }  # Mapear a [nombre, id]
+                        .map { |u| ["#{u.firstname} #{u.lastname}", u.id] }  # Mapear a [nombre, id]
   end
-
   def site_params
     params.require(:flm_site).permit(
       :s_id, :depto, :municipio, :nom_sitio, :direccion, :identificador,
