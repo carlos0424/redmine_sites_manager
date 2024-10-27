@@ -79,21 +79,20 @@ class SitesController < ApplicationController
   end
 
   def update
-    Rails.logger.info "Updating site with params: #{site_params.inspect}" # Para debug
-
-    respond_to do |format|
-      if @site.update(site_params)
-        format.html do
-          flash[:notice] = l(:notice_successful_update)
-          redirect_to sites_path
-        end
-        format.json { render json: @site }
-      else
-        load_site_collections
-        format.html { render :edit }
-        format.json { render json: @site.errors, status: :unprocessable_entity }
-      end
+    Rails.logger.info "Update params: #{params.inspect}"  # Para debug
+    
+    if @site.update(site_params)
+      flash[:notice] = l(:notice_successful_update)
+      redirect_to sites_path
+    else
+      load_site_collections
+      render :edit
     end
+  rescue => e
+    Rails.logger.error "Update error: #{e.message}"  # Para debug
+    flash[:error] = e.message
+    load_site_collections
+    render :edit
   end
 
   private

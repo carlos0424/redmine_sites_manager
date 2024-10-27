@@ -9,10 +9,7 @@ RedmineApp::Application.routes.draw do
     end
     member do
       post 'toggle_status'
+      post '/update' => 'sites#update'  # Añadir esta línea
     end
   end
-
-  # Rutas explícitas para update
-  patch '/sites/:id', to: 'sites#update'
-  put '/sites/:id', to: 'sites#update'
 end

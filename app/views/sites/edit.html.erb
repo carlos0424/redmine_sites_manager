@@ -1,16 +1,15 @@
 <h2><%= l('plugin_sites_manager.sites.edit') %></h2>
 
-<%= form_tag site_path(@site), method: :patch, class: 'tabular' do %>
-  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+<%= form_for @site, 
+            url: update_site_path(@site), 
+            method: :post,  # Cambiado a POST
+            html: { class: 'tabular' } do |f| %>
   
   <%= error_messages_for @site %>
-  
-  <%= fields_for :flm_site, @site do |f| %>
-    <%= render partial: 'form', locals: { f: f } %>
-  <% end %>
+  <%= render partial: 'form', locals: { f: f } %>
   
   <div class="buttons">
-    <%= submit_tag l(:button_save), class: 'button-positive' %>
+    <%= f.submit l(:button_save), class: 'button-positive' %>
     <%= link_to l(:button_cancel), sites_path, class: 'button' %>
   </div>
 <% end %>
