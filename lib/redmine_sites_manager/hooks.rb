@@ -40,7 +40,7 @@ module RedmineSitesManager
 
     # Hook para el menú de administración
     def view_layouts_base_sidebar(context={})
-    return '' unless User.current.admin? && context[:controller].is_a?(AdminController)
+    return '' unless User.current.admin? && context[:controller].is_a?(AdminController) && context[:controller].action_name == 'index'
   
     <<-HTML
       <div class="sites-manager-menu">
@@ -60,7 +60,6 @@ module RedmineSitesManager
       </div>
     HTML
   end
-
     # Hook para agregar campos personalizados en la vista de detalles de incidencia
     def view_issues_show_details_bottom(context={})
       issue = context[:issue]
