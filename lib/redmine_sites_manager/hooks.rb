@@ -48,18 +48,19 @@ module RedmineSitesManager
         <ul>
           <li>
             #{link_to l('plugin_sites_manager.sites.list'), 
-                     { controller: 'sites', action: 'index' },
+                     { controller: 'settings', action: 'plugin', id: 'redmine_sites_manager' },
                      class: 'icon icon-sites'}
           </li>
           <li>
             #{link_to l('plugin_sites_manager.sites.import'),
-                     { controller: 'sites', action: 'import' },
+                     { controller: 'settings', action: 'plugin', id: 'redmine_sites_manager' },
                      class: 'icon icon-import'}
           </li>
         </ul>
       </div>
     HTML
   end
+  
     # Hook para agregar campos personalizados en la vista de detalles de incidencia
     def view_issues_show_details_bottom(context={})
       issue = context[:issue]
