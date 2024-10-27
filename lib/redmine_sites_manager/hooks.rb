@@ -2,11 +2,9 @@ module RedmineSitesManager
   class Hooks < Redmine::Hook::ViewListener
     # Incluir CSS y JS en el header de todas las páginas
     def view_layouts_base_html_head(context={})
-      return unless valid_context?(context)
-      
-      stylesheet_link_tag('sites_manager', plugin: 'redmine_sites_manager') +
-      javascript_include_tag('select2.min', plugin: 'redmine_sites_manager') +
-      javascript_include_tag('sites_manager_admin', plugin: 'redmine_sites_manager')
+      stylesheet = stylesheet_link_tag('sites_manager', :plugin => 'redmine_sites_manager')
+      javascript = javascript_include_tag('sites_manager_admin', :plugin => 'redmine_sites_manager')
+      "#{stylesheet}\n#{javascript}".html_safe
     end
 
     # Hook para agregar el campo de búsqueda de sitios en el formulario de incidencias
