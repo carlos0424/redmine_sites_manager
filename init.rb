@@ -30,4 +30,10 @@ Redmine::Plugin.register :redmine_sites_manager do
       'campo_adicional_5' => ''
     }
   }, partial: 'settings/sites_manager_settings'
+
+  Rails.application.config.assets.precompile += %w(
+    sites_manager.css
+    jquery-ui.min.js
+    select2.min.js
+  )
 end
