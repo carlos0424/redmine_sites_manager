@@ -91,3 +91,7 @@ es:
     custom_fields:
       site_related: "Campo relacionado con sitios"
       required: "Campo requerido"
+
+  errors:
+      coordinador_not_found: "Coordinador no encontrado"
+      invalid_coordinador: "Coordinador inválido"

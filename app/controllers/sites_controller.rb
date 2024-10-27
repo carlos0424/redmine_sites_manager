@@ -56,8 +56,8 @@ class SitesController < ApplicationController
   end
 
   def create
-    @site = FlmSite.new(site_params)
-
+    @site = FlmSite.new(process_site_params)
+  
     respond_to do |format|
       if @site.save
         format.html do
@@ -72,6 +72,8 @@ class SitesController < ApplicationController
       end
     end
   end
+  
+  private
 
   def edit
   end
@@ -186,7 +188,7 @@ class SitesController < ApplicationController
                         .order(:firstname)
                         .map { |u| [u.name, u.id.to_s] }  # Mapear a [nombre, id]
   end
-  
+
   def site_params
     params.require(:flm_site).permit(
       :s_id, :depto, :municipio, :nom_sitio, :direccion, :identificador,
@@ -196,6 +198,19 @@ class SitesController < ApplicationController
     )
   end
   
+  def process_site_params
+    processed_params = site_params.to_h
+    
+    # Convertir el ID del coordinador al nombre completo del usuario
+    if processed_params[:coordinador].present?
+      user = User.find_by(id: processed_params[:coordinador])
+      if user
+        processed_params[:coordinador] = "#{user.firstname} #{user.lastname}".strip
+      end
+    end
+  
+    processed_params
+  end
 
   def search_sites(term)
     FlmSite.where(

@@ -9,6 +9,8 @@ class FlmSite < ActiveRecord::Base
   validates :nom_sitio, presence: true
   #validates :fijo_variable, inclusion: { in: FIJO_VARIABLE_OPTIONS }, allow_nil: true
   #validates :jerarquia_definitiva, format: { with: /\AB_[1-9]\z/, message: "debe tener el formato B_N donde N es un número" }, allow_nil: true
+  validates :coordinador, presence: true
+
   
   # Atributos accesibles
 attr_accessible :s_id, 
@@ -45,6 +47,14 @@ attr_accessible :s_id,
     term = term.to_s.strip.downcase
     where("LOWER(s_id) LIKE :term OR LOWER(nom_sitio) LIKE :term OR LOWER(identificador) LIKE :term", 
           term: "%#{term}%")
+  end
+  
+  def process_coordinador
+    # Si el coordinador es un ID, convertirlo a nombre
+    if coordinador.present? && coordinador.match?(/^\d+$/)
+      user = User.find_by(id: coordinador)
+      self.coordinador = user ? "#{user.firstname} #{user.lastname}".strip : nil
+    end
   end
 
   validates :coordinador, inclusion: { 
