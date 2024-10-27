@@ -140,14 +140,14 @@
     $(function() {
       if (typeof initializeSitesSearch === 'undefined') {
         window.sitesManagerSettings = {
-          searchUrl: '<%= search_sites_path(format: :json) %>',
-          customFieldMappings: <%= raw(Setting.plugin_redmine_sites_manager['custom_field_mappings'].to_json) rescue '{}' %>,
-          translations: {
-            noResults: '<%= l("plugin_sites_manager.search.no_results") %>',
-            searching: '<%= l("plugin_sites_manager.search.searching") %>',
-            placeholder: '<%= l("plugin_sites_manager.search.placeholder") %>'
-          }
-        };
+  searchUrl: '<%= url_for(controller: "sites", action: "search", format: :json, only_path: true) %>',
+  customFieldMappings: <%= raw(Setting.plugin_redmine_sites_manager['custom_fields_mapping'].to_json rescue '{}') %>,
+  translations: {
+    noResults: '<%= l("plugin_sites_manager.search.no_results") %>',
+    searching: '<%= l("plugin_sites_manager.search.searching") %>',
+    placeholder: '<%= l("plugin_sites_manager.search.placeholder") %>'
+  }
+};
 
         window.initializeSitesSearch = function() {
           const searchField = $('#sites-search-field');
