@@ -20,8 +20,8 @@ class FlmSite < ActiveRecord::Base
                   :jerarquia_definitiva, 
                   :fijo_variable, 
                   :coordinador,
-                  :campo_adicional_1,
-                  :campo_adicional_2,
+                  :Electrificadora,
+                  :NIC,
                   :campo_adicional_3,
                   :campo_adicional_4,
                   :campo_adicional_5
@@ -36,8 +36,8 @@ class FlmSite < ActiveRecord::Base
   scope :by_depto, ->(depto) { where("LOWER(depto) = LOWER(?)", depto) }
   scope :by_municipio, ->(municipio) { where("LOWER(municipio) = LOWER(?)", municipio) }
   scope :by_jerarquia, ->(jerarquia) { where(jerarquia_definitiva: jerarquia) }
-  scope :fijos, -> { where(fijo_variable: 'Fijo') }
-  scope :variables, -> { where(fijo_variable: 'Variable') }
+  scope :fijos, -> { where(fijo_variable: 'FIJO') }
+  scope :variables, -> { where(fijo_variable: 'VARIABLE') }
   scope :ordered, -> { order(:s_id) }
   
   def self.search(term)
@@ -71,8 +71,8 @@ class FlmSite < ActiveRecord::Base
       'jerarquia_definitiva' => header.index('jerarquia definitiva'),
       'fijo_variable' => header.index('fijo / variable'),
       'coordinador' => header.index('coordinador'),
-      'campo_adicional_1' => header.index('campo adicional 1'),
-      'campo_adicional_2' => header.index('campo adicional 2'),
+      'Electrificadora' => header.index('Electrificadora'),
+      'NIC' => header.index('NIC'),
       'campo_adicional_3' => header.index('campo adicional 3'),
       'campo_adicional_4' => header.index('campo adicional 4'),
       'campo_adicional_5' => header.index('campo adicional 5')
@@ -148,8 +148,8 @@ class FlmSite < ActiveRecord::Base
         jerarquia_definitiva: jerarquia_definitiva,
         fijo_variable: fijo_variable,
         coordinador: coordinador,
-        campo_adicional_1: campo_adicional_1,
-        campo_adicional_2: campo_adicional_2,
+        Electrificadora: Electrificadora,
+        NIC: NIC,
         campo_adicional_3: campo_adicional_3,
         campo_adicional_4: campo_adicional_4,
         campo_adicional_5: campo_adicional_5

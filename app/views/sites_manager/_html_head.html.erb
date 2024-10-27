@@ -165,7 +165,9 @@
       'direccion': 6,
       'jerarquia_definitiva': 8,
       'fijo_variable': 10,
-      'coordinador': 9
+      'coordinador': 9,
+      'Electrificadora': 25,
+      'NIC': 26
     };
 
     // Cargar datos de sitios
@@ -179,7 +181,9 @@
       direccion: site.direccion,
       jerarquia_definitiva: site.jerarquia_definitiva,
       fijo_variable: site.fijo_variable,
-      coordinador: site.coordinador
+      coordinador: site.coordinador,
+      Electrificadora: site.Electrificadora,
+      NIC: site.NIC
     }}.to_json %>;
 
     if (typeof initializeSitesSearch === 'undefined') {
@@ -256,7 +260,7 @@
             .removeClass('campo-variable campo-fijo');
 
           if (field === 'fijo_variable') {
-            element.addClass(data[field].toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
+            element.addClass(data[field].toLowerCase() === 'VARIABLE' ? 'campo-variable' : 'campo-fijo');
           }
         });
       }

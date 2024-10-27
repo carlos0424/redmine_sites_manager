@@ -125,7 +125,9 @@ module RedmineSitesManager
         3 => 'direccion',
         6 => 'jerarquia_definitiva',
         7 => 'fijo_variable',
-        9 => 'coordinador'
+        9 => 'coordinador',
+        25=> 'Electrificadora',
+        26=> 'NIC'
       }
     end
 
@@ -156,6 +158,8 @@ module RedmineSitesManager
             #{render_site_field(site, 'jerarquia_definitiva')}
             #{render_site_field(site, 'fijo_variable')}
             #{render_site_field(site, 'coordinador')}
+            #{render_site_field(site, 'Electrificadora')}
+            #{render_site_field(site, 'NIC')}
           </div>
         </div>
       HTML

@@ -194,6 +194,7 @@ class SitesController < ApplicationController
        LOWER(identificador) LIKE :term OR 
        LOWER(municipio) LIKE :term OR 
        LOWER(direccion) LIKE :term OR 
+       LOWER(NIC) LIKE :term OR 
        LOWER(depto) LIKE :term", 
       term: "%#{term}%"
     ).limit(10)
@@ -214,7 +215,9 @@ class SitesController < ApplicationController
           direccion: site.direccion,
           jerarquia_definitiva: site.jerarquia_definitiva,
           fijo_variable: site.fijo_variable,
-          coordinador: site.coordinador
+          coordinador: site.coordinador,
+          Electrificadora: site.Electrificadora,
+          NIC: site.NIC
         }
       }
     }
