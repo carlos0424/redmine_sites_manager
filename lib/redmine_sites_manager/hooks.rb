@@ -40,26 +40,26 @@ module RedmineSitesManager
 
     # Hook para el menú de administración
     def view_layouts_base_sidebar(context={})
-      if User.current.admin?
-        <<-HTML
-          <div class="sites-manager-menu">
-            <h3>#{l('plugin_sites_manager.title')}</h3>
-            <ul>
-              <li>
-                #{link_to l('plugin_sites_manager.sites.list'), 
-                         { controller: 'sites', action: 'index' },
-                         class: 'icon icon-sites'}
-              </li>
-              <li>
-                #{link_to l('plugin_sites_manager.sites.import'),
-                         { controller: 'sites', action: 'import' },
-                         class: 'icon icon-import'}
-              </li>
-            </ul>
-          </div>
-        HTML
-      end
-    end
+    return '' unless User.current.admin? && context[:controller].is_a?(AdminController)
+  
+    <<-HTML
+      <div class="sites-manager-menu">
+        <h3>#{l('plugin_sites_manager.title')}</h3>
+        <ul>
+          <li>
+            #{link_to l('plugin_sites_manager.sites.list'), 
+                     { controller: 'sites', action: 'index' },
+                     class: 'icon icon-sites'}
+          </li>
+          <li>
+            #{link_to l('plugin_sites_manager.sites.import'),
+                     { controller: 'sites', action: 'import' },
+                     class: 'icon icon-import'}
+          </li>
+        </ul>
+      </div>
+    HTML
+  end
 
     # Hook para agregar campos personalizados en la vista de detalles de incidencia
     def view_issues_show_details_bottom(context={})
