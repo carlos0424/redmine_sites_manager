@@ -2,12 +2,12 @@ class FlmSite < ActiveRecord::Base
   include Redmine::Pagination
   
   # Constantes
-  FIJO_VARIABLE_OPTIONS = ['Fijo', 'Variable'].freeze
+  #FIJO_VARIABLE_OPTIONS = ['Fijo', 'Variable'].freeze
   
   # Validaciones
   validates :s_id, presence: true, uniqueness: true, format: { with: /\AS\d+\z/, message: "debe comenzar con 'S' seguido de números" }
   validates :nom_sitio, presence: true
-  validates :fijo_variable, inclusion: { in: FIJO_VARIABLE_OPTIONS }, allow_nil: true
+  #validates :fijo_variable, inclusion: { in: FIJO_VARIABLE_OPTIONS }, allow_nil: true
   #validates :jerarquia_definitiva, format: { with: /\AB_[1-9]\z/, message: "debe tener el formato B_N donde N es un número" }, allow_nil: true
   
   # Atributos accesibles
