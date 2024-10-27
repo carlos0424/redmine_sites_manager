@@ -21,6 +21,8 @@ es:
       no_results: "No se encontraron sitios"
       searching: "Buscando..."
       select_site: "Seleccione un sitio"
+    search:
+      placeholder: "Seleccionar sitio"
       
     sites:
       title: "Gestión de Sitios"
