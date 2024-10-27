@@ -20,7 +20,6 @@
       <tr>
         <th><%= l('plugin_sites_manager.field_s_id') %></th>
         <th><%= l('plugin_sites_manager.field_nom_sitio') %></th>
-        <th><%= l('plugin_sites_manager.field_depto') %></th>
         <th><%= l('plugin_sites_manager.field_municipio') %></th>
         <th><%= l('plugin_sites_manager.field_direccion') %></th>
         <th><%= l('plugin_sites_manager.field_identificador') %></th>
@@ -41,7 +40,6 @@
         <tr>
           <td><%= h(site.s_id) %></td>
           <td><%= h(site.nom_sitio) %></td>
-          <td><%= h(site.depto) %></td>
           <td><%= h(site.municipio) %></td>
           <td><%= h(site.direccion) %></td>
           <td><%= h(site.identificador) %></td>
@@ -53,7 +51,7 @@
           <td><%= h(site.campo_adicional_3) %></td>
           <td><%= h(site.campo_adicional_4) %></td>
           <td><%= h(site.campo_adicional_5) %></td>
-          <td><%= h(site.active ? 'Activo' : 'Inactivo') %></td>
+          <td><%= site.active ? l(:status_active) : l(:status_inactive) %></td>
           <td class="buttons">
             <%= link_to l(:button_edit), edit_site_path(site), class: 'icon icon-edit' %>
             <%= link_to l(:button_delete), site_path(site),
@@ -68,3 +66,19 @@
 </div>
 
 <span class="pagination"><%= pagination_links_full @site_pages, @site_count %></span>
+
+<style>
+  .list.sites th, .list.sites td {
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .autoscroll {
+    overflow-x: auto;
+  }
+  @media (max-width: 768px) {
+    .list.sites th, .list.sites td {
+      font-size: 0.85em;
+    }
+  }
+</style>
