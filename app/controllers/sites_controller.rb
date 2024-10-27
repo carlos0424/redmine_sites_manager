@@ -146,18 +146,6 @@ class SitesController < ApplicationController
   end
   
   def site_params
-    params.require(:site).permit(
-      :s_id,
-      :depto,
-      :municipio,
-      :nom_sitio,
-      :direccion,
-      :identificador,
-      :jerarquia,
-      :definitiva,
-      :fijo_variable,
-      :coordinador,
-      :status
-    )
+    params.require(:flm_site).permit(:s_id, :depto, :municipio, :nom_sitio, :direccion, :identificador, :jerarquia_definitiva, :fijo_variable, :coordinador, :campo_adicional_1, :campo_adicional_2, :campo_adicional_3, :campo_adicional_4, :campo_adicional_5)
   end
 end

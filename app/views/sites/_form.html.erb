@@ -1,78 +1,73 @@
-<%= form_with(model: site, url: site.persisted? ? site_path(site) : sites_path, local: true) do |f| %>
+<%= form_with(model: site, local: true, as: :site) do |f| %>
     <div class="field">
       <%= f.label :s_id, l('plugin_sites_manager.fields.s_id') %>
-      <%= f.text_field :s_id, value: site.s_id %>
+      <%= f.text_field :s_id %>
     </div>
   
     <div class="field">
       <%= f.label :depto, l('plugin_sites_manager.fields.depto') %>
-      <%= f.text_field :depto, value: site.depto %>
+      <%= f.text_field :depto %>
     </div>
   
     <div class="field">
       <%= f.label :municipio, l('plugin_sites_manager.fields.municipio') %>
-      <%= f.text_field :municipio, value: site.municipio %>
+      <%= f.text_field :municipio %>
     </div>
   
     <div class="field">
       <%= f.label :nom_sitio, l('plugin_sites_manager.fields.nom_sitio') %>
-      <%= f.text_field :nom_sitio, value: site.nom_sitio %>
+      <%= f.text_field :nom_sitio %>
     </div>
   
     <div class="field">
       <%= f.label :direccion, l('plugin_sites_manager.fields.direccion') %>
-      <%= f.text_field :direccion, value: site.direccion %>
+      <%= f.text_field :direccion %>
     </div>
   
     <div class="field">
       <%= f.label :identificador, l('plugin_sites_manager.fields.identificador') %>
-      <%= f.text_field :identificador, value: site.identificador %>
+      <%= f.text_field :identificador %>
     </div>
   
     <div class="field">
       <%= f.label :jerarquia_definitiva, l('plugin_sites_manager.fields.jerarquia_definitiva') %>
-      <%= f.text_field :jerarquia_definitiva, value: site.jerarquia_definitiva %>
+      <%= f.text_field :jerarquia_definitiva %>
     </div>
   
     <div class="field">
       <%= f.label :fijo_variable, l('plugin_sites_manager.fields.fijo_variable') %>
-      <%= f.text_field :fijo_variable, value: site.fijo_variable %>
+      <%= f.text_field :fijo_variable %>
     </div>
   
     <div class="field">
       <%= f.label :coordinador, l('plugin_sites_manager.fields.coordinador') %>
-      <%= f.text_field :coordinador, value: site.coordinador %>
+      <%= f.text_field :coordinador %>
     </div>
   
     <!-- Campos adicionales -->
     <div class="field">
       <%= f.label :campo_adicional_1, l('plugin_sites_manager.fields.campo_adicional_1') %>
-      <%= f.text_field :campo_adicional_1, value: site.campo_adicional_1 %>
+      <%= f.text_field :campo_adicional_1 %>
     </div>
-  
     <div class="field">
       <%= f.label :campo_adicional_2, l('plugin_sites_manager.fields.campo_adicional_2') %>
-      <%= f.text_field :campo_adicional_2, value: site.campo_adicional_2 %>
+      <%= f.text_field :campo_adicional_2 %>
     </div>
-  
     <div class="field">
       <%= f.label :campo_adicional_3, l('plugin_sites_manager.fields.campo_adicional_3') %>
-      <%= f.text_field :campo_adicional_3, value: site.campo_adicional_3 %>
+      <%= f.text_field :campo_adicional_3 %>
     </div>
-  
     <div class="field">
       <%= f.label :campo_adicional_4, l('plugin_sites_manager.fields.campo_adicional_4') %>
-      <%= f.text_field :campo_adicional_4, value: site.campo_adicional_4 %>
+      <%= f.text_field :campo_adicional_4 %>
     </div>
-  
     <div class="field">
       <%= f.label :campo_adicional_5, l('plugin_sites_manager.fields.campo_adicional_5') %>
-      <%= f.text_field :campo_adicional_5, value: site.campo_adicional_5 %>
+      <%= f.text_field :campo_adicional_5 %>
     </div>
   
     <div class="actions">
-      <%= f.submit l(:button_save), class: 'button' %>
-      <%= link_to l(:button_cancel), sites_path, class: 'button' %>
+      <%= f.submit l(:button_save) %>
     </div>
   <% end %>
   
