@@ -1,0 +1,52 @@
+<div class="contextual">
+  <%= link_to l('plugin_sites_manager.sites.new'), new_site_path, class: 'icon icon-add' %>
+  <%= link_to l('plugin_sites_manager.sites.import'), import_sites_path, class: 'icon icon-import' %>
+</div>
+
+<h2><%= l('plugin_sites_manager.sites.list') %></h2>
+
+<%= form_tag sites_path, method: :get, class: 'sites-filter' do %>
+  <fieldset>
+    <legend><%= l(:label_filter_plural) %></legend>
+    <label><%= l('plugin_sites_manager.sites.search') %>:</label>
+    <%= text_field_tag :search, params[:search], size: 30 %>
+    <%= submit_tag l(:button_apply), class: 'button-small', name: nil %>
+  </fieldset>
+<% end %>
+
+<div class="autoscroll">
+  <table class="list sites">
+    <thead>
+      <tr>
+        <th><%= l('plugin_sites_manager.field_s_id') %></th>
+        <th><%= l('plugin_sites_manager.field_nom_sitio') %></th>
+        <th><%= l('plugin_sites_manager.field_municipio') %></th>
+        <th><%= l('plugin_sites_manager.field_direccion') %></th>
+        <th><%= l('plugin_sites_manager.field_jerarquia') %></th>
+        <th><%= l('plugin_sites_manager.field_fijo_variable') %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @sites.each do |site| %>
+        <tr>
+          <td><%= h(site.s_id) %></td>
+          <td><%= h(site.nom_sitio) %></td>
+          <td><%= h(site.municipio) %></td>
+          <td><%= h(site.direccion) %></td>
+          <td><%= h(site.jerarquia) %></td>
+          <td><%= h(site.fijo_variable) %></td>
+          <td class="buttons">
+            <%= link_to l(:button_edit), edit_site_path(site), class: 'icon icon-edit' %>
+            <%= link_to l(:button_delete), site_path(site),
+                    method: :delete,
+                    data: { confirm: l(:text_are_you_sure) },
+                    class: 'icon icon-del' %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<span class="pagination"><%= pagination_links_full @site_pages, @site_count %></span>

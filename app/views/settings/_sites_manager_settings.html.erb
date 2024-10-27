@@ -1,0 +1,126 @@
+<%= stylesheet_link_tag 'sites_manager', plugin: 'redmine_sites_manager' %>
+<%= javascript_include_tag 'sites_manager_admin', plugin: 'redmine_sites_manager' %>
+
+<div class="sites-manager-settings">
+  <div class="box tabular settings">
+    <h3>Configuración General</h3>
+    <div class="settings-group">
+      <p>
+        <label>Alcance del Plugin</label>
+        <%= select_tag 'settings[scope]', 
+            options_for_select([
+              ['Global (todos los proyectos)', 'global'],
+              ['Por proyecto (configurable)', 'project']
+            ], @settings['scope']) %>
+      </p>
+    </div>
+
+    <h3>Campos Personalizados</h3>
+    <div class="settings-group custom-fields-mapping">
+      <% FlmSite.column_names.reject { |c| %w(id created_at updated_at).include?(c) }.each do |field| %>
+        <p>
+          <label><%= field.humanize %></label>
+          <%= select_tag "settings[custom_fields_mapping][#{field}]",
+              options_from_collection_for_select(
+                CustomField.where(type: 'IssueCustomField'),
+                'id',
+                'name',
+                @settings['custom_fields_mapping']&.[](field)
+              ),
+              include_blank: true %>
+        </p>
+      <% end %>
+    </div>
+
+    <h3>Gestión de Sitios</h3>
+    <div class="sites-toolbar">
+      <input type="text" id="sites-search" placeholder="Buscar sitios..." class="sites-search">
+      <button type="button" class="button-positive" id="new-site-btn">Nuevo Sitio</button>
+      <button type="button" class="button-normal" id="import-sites-btn">Importar Excel</button>
+    </div>
+
+    <div class="sites-list">
+      <table class="list sites">
+        <thead>
+          <tr>
+            <th>S ID</th>
+            <th>Sitio</th>
+            <th>Municipio</th>
+            <th>Dirección</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="sites-table-body">
+          <!-- Se llena vía AJAX -->
+        </tbody>
+      </table>
+      <div class="pagination" id="sites-pagination">
+        <!-- Se llena vía AJAX -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para nuevo/editar sitio -->
+<div id="site-modal" class="modal" style="display: none;">
+  <h3 class="modal-title">Nuevo Sitio</h3>
+  <div class="modal-content">
+    <form id="site-form">
+      <div class="form-group">
+        <label>S ID *</label>
+        <input type="text" name="s_id" required>
+      </div>
+      <div class="form-group">
+        <label>Departamento</label>
+        <input type="text" name="depto">
+      </div>
+      <div class="form-group">
+        <label>Municipio</label>
+        <input type="text" name="municipio">
+      </div>
+      <div class="form-group">
+        <label>Nombre Sitio *</label>
+        <input type="text" name="nom_sitio" required>
+      </div>
+      <div class="form-group">
+        <label>Dirección</label>
+        <input type="text" name="direccion">
+      </div>
+      <div class="form-group">
+        <label>Identificador</label>
+        <input type="text" name="identificador">
+      </div>
+      <div class="form-group">
+        <label>Jerarquía</label>
+        <input type="text" name="jerarquia">
+      </div>
+      <div class="form-group">
+        <label>Definitiva</label>
+        <input type="text" name="definitiva">
+      </div>
+      <div class="form-group">
+        <label>Fijo/Variable</label>
+        <select name="fijo_variable">
+          <option value="Fijo">Fijo</option>
+          <option value="Variable">Variable</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Coordinador</label>
+        <input type="text" name="coordinador">
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <select name="estado">
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="button-normal modal-close">Cancelar</button>
+    <button type="button" class="button-positive" id="save-site-btn">Guardar</button>
+  </div>
+</div>

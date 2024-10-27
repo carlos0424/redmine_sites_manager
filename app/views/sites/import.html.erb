@@ -1,0 +1,30 @@
+<h2><%= l('plugin_sites_manager.sites.import') %></h2>
+
+<div class="box">
+  <%= form_tag import_sites_path, multipart: true do %>
+    <p>
+      <label><%= l('plugin_sites_manager.sites.import_file') %></label>
+      <%= file_field_tag :file, accept: '.xls,.xlsx' %>
+    </p>
+    <p>
+      <%= submit_tag l('plugin_sites_manager.sites.import_button'), class: 'button-positive' %>
+      <%= link_to l(:button_cancel), sites_path, class: 'button' %>
+    </p>
+  <% end %>
+  
+  <div class="info">
+    <p><%= l('plugin_sites_manager.sites.import_info') %></p>
+    <ul>
+      <li>S ID</li>
+      <li>DEPTO</li>
+      <li>MUNICIPIO</li>
+      <li>NOM_SITIO</li>
+      <li>DIRECCION</li>
+      <li>IDENTIFICADOR</li>
+      <li>JERARQUIA</li>
+      <li>DEFINITIVA</li>
+      <li>FIJO / VARIABLE</li>
+      <li>COORDINADOR</li>
+    </ul>
+  </div>
+</div>

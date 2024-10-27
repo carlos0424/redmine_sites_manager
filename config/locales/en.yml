@@ -1,0 +1,42 @@
+en:
+  plugin_sites_manager:
+    name: "FLM Sites Manager"
+    title: "FLM Sites Manager"
+    description: "Plugin for FLM sites management"
+    
+    settings:
+      title: "Sites Manager Settings"
+      scope: "Plugin Scope"
+      global: "Global (all projects)"
+      by_project: "By project"
+      custom_fields_mapping: "Fields Mapping"
+    
+    sites:
+      title: "Sites Management"
+      new: "New Site"
+      edit: "Edit Site"
+      list: "Sites List"
+      import: "Import Sites"
+      search: "Search sites..."
+      
+    fields:
+      s_id: "S ID"
+      depto: "Department"
+      municipio: "Municipality"
+      nom_sitio: "Site Name"
+      direccion: "Address"
+      identificador: "Identifier"
+      jerarquia_definitiva: "Definitive Hierarchy"
+      fijo_variable: "Fixed/Variable"
+      coordinador: "Coordinator"
+      campo_adicional_1: "Additional Field 1"
+      campo_adicional_2: "Additional Field 2"
+      campo_adicional_3: "Additional Field 3"
+      campo_adicional_4: "Additional Field 4"
+      campo_adicional_5: "Additional Field 5"
+    
+    messages:
+      import_success: "Sites imported successfully"
+      import_error: "Error importing sites"
+      status_updated: "Site status updated"
+      status_update_failed: "Error updating site status"
