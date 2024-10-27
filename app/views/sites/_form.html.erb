@@ -51,13 +51,48 @@
 </p>
     </div>
 
-    <div class="splitcontentright">
-      <p>
-        <%= f.label :coordinador, l('plugin_sites_manager.fields.coordinador') %>
-        <%= f.text_field :coordinador %>
-      </p>
-    </div>
-  </div>
+<div class="splitcontentright">
+  <p>
+    <%= f.label :coordinador, l('plugin_sites_manager.fields.coordinador') %>
+    <%= select_tag 'flm_site[coordinador]', options_for_select([], selected: nil), 
+        id: 'coordinador-select', 
+        style: 'width: 100%;', 
+        include_blank: true %>
+    <%= hidden_field_tag 'flm_site[coordinador_id]', nil, id: 'coordinador-id-hidden' %>
+  </p>
+</div>
+
+<%= javascript_include_tag 'select2.min', plugin: 'redmine_sites_manager' %>
+<%= stylesheet_link_tag 'select2.min', plugin: 'redmine_sites_manager' %>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    // Inicializar select2 en el campo del coordinador
+    $('#coordinador-select').select2({
+      placeholder: 'Seleccione un Coordinador',
+      allowClear: true,
+      ajax: {
+        url: '/get_coordinators', // Cambia esta ruta si es necesario
+        dataType: 'json',
+        delay: 250,
+        processResults: function(data) {
+          return {
+            results: data.map(function(coordinator) {
+              return { id: coordinator.id, text: coordinator.name };
+            })
+          };
+        }
+      }
+    });
+
+    // Actualizar el campo oculto con el ID seleccionado
+    $('#coordinador-select').on('select2:select', function(e) {
+      var coordinatorId = e.params.data.id;
+      $('#coordinador-id-hidden').val(coordinatorId);
+    });
+  });
+</script>
+
 
   <fieldset class="box">
     <legend>Campos Adicionales</legend>
