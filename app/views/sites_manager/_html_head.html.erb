@@ -1,8 +1,8 @@
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'sites_manager', plugin: 'redmine_sites_manager' %>
   <%= javascript_include_tag 'sites_manager_admin', plugin: 'redmine_sites_manager' %>
-  <%= javascript_include_tag 'select2.min', plugin: 'redmine_sites_manager' %>
-  
+  <%= javascript_include_tag 'jquery-ui/autocomplete-min', plugin: 'redmine' %>
+
   <style type="text/css">
     /* Contenedor de búsqueda */
     .sites-search-container {
@@ -18,13 +18,20 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       font-size: 14px;
-      transition: border-color 0.3s ease;
+      transition: all 0.3s ease;
+      background-color: #fff;
     }
 
     .sites-autocomplete:focus {
       border-color: #2996cc;
       outline: none;
       box-shadow: 0 0 0 2px rgba(41, 150, 204, 0.1);
+    }
+
+    .sites-autocomplete.loading {
+      background-image: url('../images/loading.gif');
+      background-repeat: no-repeat;
+      background-position: right 30px center;
     }
     
     /* Botón de limpiar */
@@ -36,12 +43,13 @@
       cursor: pointer;
       color: #666;
       font-size: 18px;
-      width: 20px;
-      height: 20px;
-      line-height: 20px;
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
       text-align: center;
       border-radius: 50%;
       transition: all 0.2s ease;
+      display: none;
     }
 
     .sites-clear-btn:hover {
@@ -62,21 +70,22 @@
     .sites-info {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 10px;
+      gap: 12px;
     }
 
     .sites-info p {
       margin: 5px 0;
-      padding: 8px;
+      padding: 10px;
       background: #fff;
-      border-radius: 3px;
+      border-radius: 4px;
+      border: 1px solid #eee;
     }
 
     .sites-info strong {
-      color: #666;
+      color: #555;
       display: block;
       font-size: 0.9em;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
     
     /* Estados y tipos */
@@ -85,14 +94,9 @@
       border: 2px solid #ffc107 !important;
     }
 
-    .status-active {
-      color: #28a745;
-      font-weight: bold;
-    }
-
-    .status-inactive {
-      color: #dc3545;
-      font-weight: bold;
+    .campo-fijo {
+      background-color: #e8f5e9 !important;
+      border: 2px solid #4caf50 !important;
     }
 
     /* Autocompletado */
@@ -104,131 +108,216 @@
       border-radius: 4px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       background: #fff;
+      z-index: 9999;
+      padding: 0;
     }
 
     .ui-menu-item {
-      padding: 8px;
+      padding: 0;
       border-bottom: 1px solid #f0f0f0;
+      list-style: none;
+      margin: 0;
     }
 
     .ui-menu-item:last-child {
       border-bottom: none;
     }
 
-    .ui-menu-item div {
-      padding: 4px 8px;
+    .ui-menu-item-wrapper {
+      padding: 8px 12px;
       cursor: pointer;
     }
 
-    .ui-menu-item div:hover {
+    .ui-menu-item-wrapper.ui-state-active {
       background-color: #f5f5f5;
+      border: none;
+      margin: 0;
     }
 
-    .ui-menu-item strong {
-      display: block;
+    .site-result {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .site-result strong {
       color: #333;
-      margin-bottom: 2px;
+      font-size: 14px;
     }
 
-    .ui-menu-item small {
+    .site-result small {
       color: #666;
-      font-size: 0.9em;
+      font-size: 12px;
+      display: block;
     }
   </style>
 
   <script type="text/javascript">
-  $(function() {
-    if (typeof initializeSitesSearch === 'undefined') {
-      window.sitesManagerSettings = {
-        searchUrl: '<%= url_for(controller: "sites", action: "search", format: :json, only_path: true) %>',
-        customFieldMappings: <%= begin
-                                raw(Setting.plugin_redmine_sites_manager['custom_fields_mapping'].to_json)
-                              rescue
-                                '{}'
-                              end %>,
-        translations: {
-          noResults: '<%= l("plugin_sites_manager.search.no_results") %>',
-          searching: '<%= l("plugin_sites_manager.search.searching") %>',
-          placeholder: '<%= l("plugin_sites_manager.search.placeholder") %>'
-        }
-      };
-
-      window.initializeSitesSearch = function() {
-        const searchField = $('#sites-search-field');
-        if (!searchField.length) return;
-
-        searchField.attr('placeholder', window.sitesManagerSettings.translations.placeholder);
-
-        searchField.autocomplete({
-          source: window.sitesManagerSettings.searchUrl,
-          minLength: 2,
-          delay: 300,
-          autoFocus: true,
-          messages: {
-            noResults: window.sitesManagerSettings.translations.noResults,
-            results: function() {}
+    $(function() {
+      if (typeof initializeSitesSearch === 'undefined') {
+        // Configuración global
+        window.sitesManagerSettings = {
+          searchUrl: '<%= url_for(controller: "sites", action: "search", format: :json, only_path: true) %>',
+          customFieldMappings: <%= begin
+                                  raw(Setting.plugin_redmine_sites_manager['custom_fields_mapping'].to_json)
+                                rescue
+                                  '{}'
+                                end %>,
+          translations: {
+            noResults: '<%= l("plugin_sites_manager.search.no_results") %>',
+            searching: '<%= l("plugin_sites_manager.search.searching") %>',
+            placeholder: '<%= l("plugin_sites_manager.search.placeholder") %>'
           },
-          select: function(event, ui) {
-            updateFields(ui.item.site_data);
-            return false;
-          }
-        }).autocomplete('instance')._renderItem = function(ul, item) {
-          return $('<li>')
-            .append(`
-              <div>
-                <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
-                <small>${item.site_data.direccion || ''}</small>
-                ${item.site_data.municipio ? `<small>${item.site_data.municipio}</small>` : ''}
-              </div>
-            `)
-            .appendTo(ul);
+          csrfToken: $('meta[name="csrf-token"]').attr('content')
         };
 
-        $('.sites-clear-btn').on('click', function() {
-          clearFields();
-        });
-
-        searchField.on('input', function() {
-          $('.sites-clear-btn').toggle(Boolean($(this).val()));
-        }).trigger('input');
-      };
-
-      function updateFields(data) {
-        if (!window.sitesManagerSettings.customFieldMappings) return;
-
-        Object.entries(window.sitesManagerSettings.customFieldMappings).forEach(function([field, fieldId]) {
-          if (!fieldId || !data[field]) return;
+        // Inicialización principal
+        window.initializeSitesSearch = function() {
+          const searchField = $('#sites-search-field');
+          const clearButton = $('.sites-clear-btn');
           
-          const element = $(`#issue_custom_field_values_${fieldId}`);
-          if (!element.length) return;
+          if (!searchField.length) return;
 
-          element.val(data[field]).trigger('change');
-          
-          if (field === 'fijo_variable' && data[field] === 'Variable') {
-            element.addClass('campo-variable');
+          // Configurar AJAX
+          $.ajaxSetup({
+            beforeSend: function(xhr) {
+              xhr.setRequestHeader('X-CSRF-Token', window.sitesManagerSettings.csrfToken);
+            }
+          });
+
+          // Configurar campo de búsqueda
+          searchField
+            .attr('placeholder', window.sitesManagerSettings.translations.placeholder)
+            .autocomplete({
+              source: function(request, response) {
+                searchField.addClass('loading');
+                $.ajax({
+                  url: window.sitesManagerSettings.searchUrl,
+                  dataType: 'json',
+                  data: { term: request.term },
+                  success: function(data) {
+                    searchField.removeClass('loading');
+                    response(data);
+                  },
+                  error: function() {
+                    searchField.removeClass('loading');
+                    response([]);
+                  }
+                });
+              },
+              minLength: 2,
+              delay: 300,
+              autoFocus: true,
+              messages: {
+                noResults: window.sitesManagerSettings.translations.noResults,
+                results: function() {}
+              },
+              select: function(event, ui) {
+                if (ui.item) {
+                  updateFields(ui.item.site_data);
+                  $(this).val(ui.item.site_data.s_id + ' - ' + ui.item.site_data.nom_sitio);
+                }
+                return false;
+              },
+              close: function() {
+                searchField.removeClass('loading');
+              }
+            })
+            .autocomplete('instance')._renderItem = function(ul, item) {
+              return $('<li>')
+                .append(`
+                  <div class="ui-menu-item-wrapper">
+                    <div class="site-result">
+                      <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
+                      <small>
+                        ${item.site_data.municipio || ''}
+                        ${item.site_data.direccion ? `- ${item.site_data.direccion}` : ''}
+                      </small>
+                    </div>
+                  </div>
+                `)
+                .appendTo(ul);
+            };
+
+          // Manejar botón de limpiar
+          clearButton.on('click', clearFields);
+
+          // Mostrar/ocultar botón de limpiar
+          searchField.on('input', function() {
+            clearButton.toggle(Boolean($(this).val()));
+          }).trigger('input');
+
+          // Detectar cambios en campos personalizados
+          $('[id^="issue_custom_field_values_"]').on('change', function() {
+            const fieldId = $(this).attr('id').replace('issue_custom_field_values_', '');
+            handleCustomFieldChange(fieldId, $(this).val());
+          });
+        };
+
+        // Función para actualizar campos
+        function updateFields(data) {
+          if (!window.sitesManagerSettings.customFieldMappings) return;
+
+          Object.entries(window.sitesManagerSettings.customFieldMappings).forEach(function([field, fieldId]) {
+            if (!fieldId || !data[field]) return;
+            
+            const element = $(`#issue_custom_field_values_${fieldId}`);
+            if (!element.length) return;
+
+            element
+              .val(data[field])
+              .trigger('change')
+              .removeClass('campo-variable campo-fijo');
+
+            if (field === 'fijo_variable') {
+              element.addClass(data[field].toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
+            }
+          });
+
+          // Mostrar notificación de éxito
+          if (window.showFlashMessage) {
+            window.showFlashMessage('notice', '<%= l("plugin_sites_manager.messages.fields_updated") %>');
           }
-        });
-      }
+        }
 
-      function clearFields() {
-        $('#sites-search-field').val('');
-        
-        if (!window.sitesManagerSettings.customFieldMappings) return;
-
-        Object.values(window.sitesManagerSettings.customFieldMappings).forEach(function(fieldId) {
-          if (!fieldId) return;
+        // Función para limpiar campos
+        function clearFields() {
+          const searchField = $('#sites-search-field');
+          searchField.val('').trigger('input');
           
-          const element = $(`#issue_custom_field_values_${fieldId}`);
-          if (!element.length) return;
+          if (!window.sitesManagerSettings.customFieldMappings) return;
 
-          element.val('').trigger('change').removeClass('campo-variable');
-        });
+          Object.values(window.sitesManagerSettings.customFieldMappings).forEach(function(fieldId) {
+            if (!fieldId) return;
+            
+            const element = $(`#issue_custom_field_values_${fieldId}`);
+            if (!element.length) return;
+
+            element
+              .val('')
+              .trigger('change')
+              .removeClass('campo-variable campo-fijo');
+          });
+        }
+
+        // Función para manejar cambios en campos personalizados
+        function handleCustomFieldChange(fieldId, value) {
+          const mappings = window.sitesManagerSettings.customFieldMappings;
+          const field = Object.keys(mappings).find(key => mappings[key] === fieldId);
+          
+          if (field === 'fijo_variable') {
+            const element = $(`#issue_custom_field_values_${fieldId}`);
+            element
+              .removeClass('campo-variable campo-fijo')
+              .addClass(value.toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
+          }
+        }
       }
-    }
 
-    if ($('#issue-form').length) {
-      initializeSitesSearch();
-    }
-  });
-</script>
+      // Inicializar si estamos en un formulario de incidencia
+      if ($('#issue-form').length) {
+        initializeSitesSearch();
+      }
+    });
+  </script>
 <% end %>

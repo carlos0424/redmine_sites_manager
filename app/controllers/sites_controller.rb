@@ -1,7 +1,7 @@
 class SitesController < ApplicationController
   unloadable
 
-  before_action :require_login
+  before_action :require_login, except: [:search]
   before_action :require_admin, except: [:search, :index, :show]
   before_action :find_site, only: [:show, :edit, :update, :destroy, :toggle_status]
   before_action :load_site_collections, only: [:new, :create, :edit, :update]
@@ -118,8 +118,10 @@ class SitesController < ApplicationController
   end
 
   def search
-    # Asegurarse de que el término de búsqueda no esté vacío
-    return render json: [] if params[:term].blank?
+    unless User.current.logged?
+      render json: [], status: :forbidden
+      return
+    end
 
     @sites = FlmSite.where(
       "LOWER(s_id) LIKE :term OR 
@@ -128,7 +130,7 @@ class SitesController < ApplicationController
        LOWER(municipio) LIKE :term OR 
        LOWER(direccion) LIKE :term OR 
        LOWER(depto) LIKE :term", 
-      term: "%#{params[:term].to_s.downcase.strip}%"
+      term: "%#{params[:term].to_s.downcase}%"
     ).limit(10)
 
     respond_to do |format|
@@ -153,10 +155,8 @@ class SitesController < ApplicationController
         }
       }
     end
-  rescue StandardError => e
-    render json: { error: e.message }, status: :unprocessable_entity
   end
-
+  
   def toggle_status
     respond_to do |format|
       if @site.toggle_status!
