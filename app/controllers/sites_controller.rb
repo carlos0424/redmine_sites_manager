@@ -186,10 +186,7 @@ class SitesController < ApplicationController
       :campo_adicional_4, :campo_adicional_5
     )
   end
-  def get_coordinators
-    coordinators = User.where(role: 'Coordinador').select(:id, :name)
-    render json: coordinators.map { |user| { id: user.id, name: user.name } }
-  end
+  
 
   def search_sites(term)
     FlmSite.where(
