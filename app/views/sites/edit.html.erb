@@ -1,8 +1,11 @@
 <h2><%= l('plugin_sites_manager.sites.edit') %></h2>
 
-<%= form_for @site, url: actualizar_site_path(@site), method: :patch, html: { class: 'tabular' } do |f| %>
-  <%= error_messages_for @site %>
+<%= form_for @site, 
+            url: update_site_path(@site), 
+            method: :post,  # Cambiado a POST
+            html: { class: 'tabular' } do |f| %>
   
+  <%= error_messages_for @site %>
   <%= render partial: 'form', locals: { f: f } %>
   
   <div class="buttons">
