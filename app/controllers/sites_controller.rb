@@ -103,13 +103,40 @@ class SitesController < ApplicationController
   end
 
   def search
-    # Asegura que solo usuarios autenticados puedan buscar
     return render_403 unless User.current.logged?
-
-    @sites = build_search_scope.limit(10)
-
+  
+    term = params[:term].to_s.strip.downcase
+    @sites = FlmSite.where(
+      "LOWER(s_id) LIKE :term OR 
+       LOWER(nom_sitio) LIKE :term OR 
+       LOWER(identificador) LIKE :term OR 
+       LOWER(municipio) LIKE :term OR 
+       LOWER(direccion) LIKE :term OR 
+       LOWER(depto) LIKE :term", 
+      term: "%#{term}%"
+    ).limit(10)
+  
     respond_to do |format|
-      format.json { render json: @sites.map(&:to_json_for_autocomplete) }
+      format.json { 
+        render json: @sites.map { |site| 
+          {
+            id: site.id,
+            label: "#{site.s_id} - #{site.nom_sitio} (#{site.municipio})",
+            value: site.nom_sitio,
+            site_data: {
+              s_id: site.s_id,
+              nom_sitio: site.nom_sitio,
+              identificador: site.identificador,
+              depto: site.depto,
+              municipio: site.municipio,
+              direccion: site.direccion,
+              jerarquia_definitiva: site.jerarquia_definitiva,
+              fijo_variable: site.fijo_variable,
+              coordinador: site.coordinador
+            }
+          }
+        }
+      }
     end
   end
 

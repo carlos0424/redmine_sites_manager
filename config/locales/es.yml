@@ -17,6 +17,10 @@ es:
       location_fields: "Campos de Ubicación"
       characteristic_fields: "Características del Sitio"
       additional_fields: "Campos Adicionales"
+      placeholder: "Buscar por ID, nombre, municipio o dirección..."
+      no_results: "No se encontraron sitios"
+      searching: "Buscando..."
+      select_site: "Seleccione un sitio"
       
     sites:
       title: "Gestión de Sitios"
