@@ -15,24 +15,29 @@ class SitesController < ApplicationController
     
     @limit = per_page_option
     
-    scope = @query.results_scope(order: sort_clause)
+    scope = FlmSite.order(created_at: :desc)
+    
+    # Búsqueda simple si no se usa SiteQuery
+    if params[:search].present?
+      search_term = "%#{params[:search].downcase}%"
+      scope = scope.where("LOWER(s_id) LIKE ? OR LOWER(nom_sitio) LIKE ?", 
+                         search_term, search_term)
+    end
     
     @site_count = scope.count
     @site_pages = Paginator.new @site_count, @limit, params['page']
     @offset ||= @site_pages.offset
     @sites = scope.limit(@limit).offset(@offset)
     
-    # Datos para filtros
+    # Cargar datos para filtros
     @departamentos = FlmSite.distinct.pluck(:depto).compact.sort
     @municipios = FlmSite.distinct.pluck(:municipio).compact.sort
     @jerarquias = FlmSite.distinct.pluck(:jerarquia_definitiva).compact.sort
     
     respond_to do |format|
       format.html
+      format.json { render json: { sites: @sites, total: @site_count } }
       format.api
-      format.json { render json: { sites: @sites.map(&:to_json_for_list), total: @site_count } }
-      format.csv { send_data(export_to_csv(@sites), filename: "sites-#{Date.today}.csv") }
-      format.xlsx { send_data(export_to_xlsx(@sites), filename: "sites-#{Date.today}.xlsx") }
     end
   end
   
@@ -43,6 +48,7 @@ class SitesController < ApplicationController
       format.json { render json: @site.to_json_for_details }
     end
   end
+  private
 
   def new
     @site = FlmSite.new
@@ -229,9 +235,10 @@ class SitesController < ApplicationController
   end
   
   def build_site_query
-    @query = SiteQuery.build_from_params(params)
+    @query = params[:search].present? ? 
+      { search: params[:search] } : 
+      {}
   end
-  
   def export_to_csv(sites)
     require 'csv'
     
