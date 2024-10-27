@@ -76,16 +76,17 @@ class SitesController < ApplicationController
   private
 
   def edit
-    # La acción existe pero está vacía porque usamos @site que ya está cargado
   end
 
   def update
+    Rails.logger.info "Updating site with params: #{site_params.inspect}" # Para debug
+
     respond_to do |format|
       if @site.update(site_params)
-        format.html {
+        format.html do
           flash[:notice] = l(:notice_successful_update)
           redirect_to sites_path
-        }
+        end
         format.json { render json: @site }
       else
         load_site_collections
@@ -96,7 +97,6 @@ class SitesController < ApplicationController
   end
 
   private
-
 
   def destroy
     if @site.destroy

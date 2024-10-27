@@ -1,13 +1,16 @@
-<%# /app/views/sites/edit.html.erb %>
 <h2><%= l('plugin_sites_manager.sites.edit') %></h2>
 
-<%= form_for @site, url: site_path(@site), method: :patch, html: { class: 'tabular' } do |f| %>
+<%= form_tag site_path(@site), method: :patch, class: 'tabular' do %>
+  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+  
   <%= error_messages_for @site %>
   
-  <%= render partial: 'form', locals: { f: f } %>
+  <%= fields_for :flm_site, @site do |f| %>
+    <%= render partial: 'form', locals: { f: f } %>
+  <% end %>
   
   <div class="buttons">
-    <%= f.submit l(:button_save), class: 'button-positive' %>
+    <%= submit_tag l(:button_save), class: 'button-positive' %>
     <%= link_to l(:button_cancel), sites_path, class: 'button' %>
   </div>
 <% end %>
