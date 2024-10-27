@@ -5,97 +5,59 @@
 
 <h2><%= l('plugin_sites_manager.sites.list') %></h2>
 
-<div class="fields-grid">
+<%= form_tag sites_path, method: :get, class: 'sites-filter' do %>
   <fieldset>
-    <legend><%= l('plugin_sites_manager.settings.title') %></legend>
-    
-    <%# Organiza los campos en una cuadrícula %>
-    <div class="grid-container">
-      <p>
-        <label><%= l('plugin_sites_manager.fields.s_id') %></label>
-        <%= select_tag 's_id' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.depto') %></label>
-        <%= select_tag 'depto' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.municipio') %></label>
-        <%= select_tag 'municipio' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.nom_sitio') %></label>
-        <%= select_tag 'nom_sitio' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.direccion') %></label>
-        <%= select_tag 'direccion' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.identificador') %></label>
-        <%= select_tag 'identificador' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.jerarquia_definitiva') %></label>
-        <%= select_tag 'jerarquia_definitiva' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.fijo_variable') %></label>
-        <%= select_tag 'fijo_variable' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.coordinador') %></label>
-        <%= select_tag 'coordinador' %>
-      </p>
-      <%# Incluye los campos personalizados adicionales %>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.campo_adicional_1') %></label>
-        <%= select_tag 'campo_adicional_1' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.campo_adicional_2') %></label>
-        <%= select_tag 'campo_adicional_2' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.campo_adicional_3') %></label>
-        <%= select_tag 'campo_adicional_3' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.campo_adicional_4') %></label>
-        <%= select_tag 'campo_adicional_4' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.campo_adicional_5') %></label>
-        <%= select_tag 'campo_adicional_5' %>
-      </p>
-      <p>
-        <label><%= l('plugin_sites_manager.fields.active') %></label>
-        <%= select_tag 'active' %>
-      </p>
-    </div>
+    <legend><%= l(:label_filter_plural) %></legend>
+    <label><%= l('plugin_sites_manager.sites.search') %>:</label>
+    <%= text_field_tag :search, params[:search], size: 30 %>
+    <%= submit_tag l(:button_apply), class: 'button-small', name: nil %>
   </fieldset>
+<% end %>
+
+<div class="autoscroll">
+  <table class="list sites">
+    <thead>
+      <tr>
+        <th><%= l('plugin_sites_manager.field_s_id') %></th>
+        <th><%= l('plugin_sites_manager.field_nom_sitio') %></th>
+        <th><%= l('plugin_sites_manager.field_municipio') %></th>
+        <th><%= l('plugin_sites_manager.field_direccion') %></th>
+        <th><%= l('plugin_sites_manager.field_estado') %></th>
+        <th><%= l(:label_actions) %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @sites.each do |site| %>
+        <tr>
+          <td><%= h(site.s_id) %></td>
+          <td><%= h(site.nom_sitio) %></td>
+          <td><%= h(site.municipio) %></td>
+          <td><%= h(site.direccion) %></td>
+          <td><%= site.active? ? l(:label_active) : l(:label_inactive) %></td>
+          <td>
+            <%= link_to l(:button_edit), edit_site_path(site), class: 'icon icon-edit' %>
+            <%= link_to l(:button_delete), site_path(site), method: :delete, data: { confirm: l(:text_are_you_sure) }, class: 'icon icon-del' %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 </div>
 
+<span class="pagination"><%= pagination_links_full @site_pages, @site_count %></span>
+
 <style>
-  .fields-grid .grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+  .list.sites th, .list.sites td {
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
   }
-
-  .fields-grid label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 4px;
+  .autoscroll {
+    overflow-x: auto;
   }
-
-  .fields-grid p {
-    margin: 0;
-  }
-
   @media (max-width: 768px) {
-    .fields-grid .grid-container {
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    .list.sites th, .list.sites td {
+      font-size: 0.85em;
     }
   }
 </style>
