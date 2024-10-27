@@ -17,6 +17,7 @@ en:
       edit: "Edit Site"
       list: "Sites List"
       import: "Import Sites"
+      search_label: "Search sites..."
       search: "Search sites..."
       
     fields:

@@ -7,7 +7,9 @@ class SitesController < ApplicationController
   
   helper :sort
   include SortHelper
-  
+  def index
+    @sites = FlmSite.order(created_at: :desc) # Aseguramos que @sites obtenga todos los registros
+  end
   def index
     @limit = per_page_option
     

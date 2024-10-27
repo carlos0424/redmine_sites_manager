@@ -22,8 +22,10 @@
         <th><%= l('plugin_sites_manager.field_nom_sitio') %></th>
         <th><%= l('plugin_sites_manager.field_municipio') %></th>
         <th><%= l('plugin_sites_manager.field_direccion') %></th>
-        <th><%= l('plugin_sites_manager.field_estado') %></th>
-        <th><%= l(:label_actions) %></th>
+        <th><%= l('plugin_sites_manager.field_identificador') %></th>
+        <th><%= l('plugin_sites_manager.field_coordinador') %></th>
+        <!-- Agregamos más columnas según lo necesario -->
+        <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
@@ -33,17 +35,21 @@
           <td><%= h(site.nom_sitio) %></td>
           <td><%= h(site.municipio) %></td>
           <td><%= h(site.direccion) %></td>
-          <td><%= site.active? ? l(:label_active) : l(:label_inactive) %></td>
-          <td>
+          <td><%= h(site.identificador) %></td>
+          <td><%= h(site.coordinador) %></td>
+          <!-- Agregamos más campos si es necesario -->
+          <td class="buttons">
             <%= link_to l(:button_edit), edit_site_path(site), class: 'icon icon-edit' %>
-            <%= link_to l(:button_delete), site_path(site), method: :delete, data: { confirm: l(:text_are_you_sure) }, class: 'icon icon-del' %>
+            <%= link_to l(:button_delete), site_path(site),
+                    method: :delete,
+                    data: { confirm: l(:text_are_you_sure) },
+                    class: 'icon icon-del' %>
           </td>
         </tr>
       <% end %>
     </tbody>
   </table>
 </div>
-
 <span class="pagination"><%= pagination_links_full @site_pages, @site_count %></span>
 
 <style>

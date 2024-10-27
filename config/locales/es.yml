@@ -18,10 +18,13 @@ es:
       edit: "Editar Sitio"
       list: "Lista de Sitios"
       import: "Importar Sitios"
+      search_label: "Buscar sitios..."
       search: "Buscar sitios..."
       search_placeholder: "Buscar por ID o nombre del sitio..."
       download_template: "Descargar Plantilla"
       import_instructions: "Instrucciones de Importación"
+      label_sites_manager: "Gestión de Sitios"
+
       
     fields:
       s_id: "S ID"

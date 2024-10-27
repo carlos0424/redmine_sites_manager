@@ -30,3 +30,9 @@ Redmine::Plugin.register :redmine_sites_manager do
     }
   }, partial: 'settings/sites_manager_settings'
 end
+Redmine::MenuManager.map :admin_menu do |menu|
+  menu.push :sites_manager,
+            { controller: 'sites', action: 'index' },
+            caption: :label_sites_manager,
+            html: { class: 'icon icon-sites' }
+end
