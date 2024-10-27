@@ -57,7 +57,16 @@ module SitesHelper
       end
     end
   end
-
+  
+  def cancel_button
+    link_to l(:button_cancel), sites_path, class: 'button'
+  end
+  
+  def site_error_messages(site, field)
+    if site.errors.include?(field)
+      content_tag(:span, site.errors.full_messages_for(field).join(", "), class: 'error')
+    end
+  end
   def site_table_header
     content_tag(:tr) do
       concat content_tag(:th, l('plugin_sites_manager.field_s_id'))

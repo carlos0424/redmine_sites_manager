@@ -1,17 +1,12 @@
-<div class="contextual">
-  <%= link_to l('plugin_sites_manager.sites.list'), sites_path, class: 'icon icon-list' %>
-</div>
-
+<%# /app/views/sites/new.html.erb %>
 <h2><%= l('plugin_sites_manager.sites.new') %></h2>
 
-<%= form_for @site, url: sites_path, html: { class: 'site-form tabular' } do |f| %>
+<%= form_with(model: @site, local: true) do |f| %>
   <%= render partial: 'form', locals: { f: f } %>
   
-  <div class="box tabular">
-    <div class="buttons">
-      <%= submit_tag l(:button_create), class: 'button-positive' %>
-      <%= link_to l(:button_cancel), sites_path, class: 'button' %>
-    </div>
+  <div class="buttons">
+    <%= f.submit l(:button_create), class: 'button-positive' %>
+    <%= link_to l(:button_cancel), sites_path, class: 'button' %>
   </div>
 <% end %>
 
