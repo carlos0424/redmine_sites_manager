@@ -76,26 +76,28 @@ class SitesController < ApplicationController
   end
   
   def edit
+    @site = FlmSite.find(params[:id])
     @departamentos = FlmSite.distinct.pluck(:depto).compact.sort
     @municipios = FlmSite.distinct.pluck(:municipio).compact.sort
+  rescue ActiveRecord::RecordNotFound
+    render_404
   end
   
   def update
-    respond_to do |format|
-      if @site.update(site_params)
-        format.html {
-          flash[:notice] = l(:notice_successful_update)
-          redirect_to sites_path
-        }
-        format.json { render json: @site.to_json_for_details }
-      else
-        @departamentos = FlmSite.distinct.pluck(:depto).compact.sort
-        @municipios = FlmSite.distinct.pluck(:municipio).compact.sort
-        format.html { render :edit }
-        format.json { render json: { errors: @site.errors.full_messages }, status: :unprocessable_entity }
-      end
+    @site = FlmSite.find(params[:id])
+    if @site.update(site_params)
+      flash[:notice] = l(:notice_successful_update)
+      redirect_to sites_path
+    else
+      @departamentos = FlmSite.distinct.pluck(:depto).compact.sort
+      @municipios = FlmSite.distinct.pluck(:municipio).compact.sort
+      render :edit
     end
+  rescue ActiveRecord::RecordNotFound
+    render_404
   end
+  
+  private
   
   def destroy
     begin
@@ -229,8 +231,7 @@ class SitesController < ApplicationController
       :campo_adicional_2,
       :campo_adicional_3,
       :campo_adicional_4,
-      :campo_adicional_5,
-      :active
+      :campo_adicional_5
     )
   end
   

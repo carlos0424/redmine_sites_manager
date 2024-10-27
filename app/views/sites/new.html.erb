@@ -1,7 +1,7 @@
 <%# /app/views/sites/new.html.erb %>
 <h2><%= l('plugin_sites_manager.sites.new') %></h2>
 
-<%= form_with(model: @site, local: true) do |f| %>
+<%= form_with(model: @site, url: sites_path, method: :post, local: true) do |f| %>
   <%= render partial: 'form', locals: { f: f } %>
   
   <div class="buttons">
