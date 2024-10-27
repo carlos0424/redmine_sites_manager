@@ -45,12 +45,10 @@
         <%= f.text_field :jerarquia_definitiva %>
       </p>
 
-      <p>
-        <%= f.label :fijo_variable, l('plugin_sites_manager.fields.fijo_variable') %>
-        <%= f.select :fijo_variable, 
-                    [['FIJO', 'FIJO'], ['VARIABLE', 'VARIABLE']], 
-                    { include_blank: true } %>
-      </p>
+<p>
+  <%= f.label :fijo_variable, l('plugin_sites_manager.fields.fijo_variable') %>
+  <%= f.text_field :fijo_variable %>
+</p>
     </div>
 
     <div class="splitcontentright">
