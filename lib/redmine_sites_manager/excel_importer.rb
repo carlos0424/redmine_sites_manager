@@ -47,7 +47,9 @@ module RedmineSitesManager
         'jerarquia' => header.index('jerarquia'),
         'definitiva' => header.index('definitiva'),
         'fijo_variable' => header.index('fijo  / variable'),
-        'coordinador' => header.index('coordinador')
+        'coordinador' => header.index('coordinador'),
+        'electrificadora' => header.index('electrificadora'),
+        'nic' => header.index('nic')
       }
       
       validate_columns(column_mapping)

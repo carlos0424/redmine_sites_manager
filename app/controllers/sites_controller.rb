@@ -182,7 +182,7 @@ class SitesController < ApplicationController
     params.require(:flm_site).permit(
       :s_id, :depto, :municipio, :nom_sitio, :direccion, :identificador,
       :jerarquia_definitiva, :fijo_variable, :coordinador,
-      :campo_adicional_1, :campo_adicional_2, :campo_adicional_3,
+      :electrificadora, :nic, :campo_adicional_3,
       :campo_adicional_4, :campo_adicional_5
     )
   end

@@ -11,20 +11,21 @@ class FlmSite < ActiveRecord::Base
   #validates :jerarquia_definitiva, format: { with: /\AB_[1-9]\z/, message: "debe tener el formato B_N donde N es un número" }, allow_nil: true
   
   # Atributos accesibles
-  attr_accessible :s_id, 
-                  :depto, 
-                  :municipio, 
-                  :nom_sitio, 
-                  :direccion, 
-                  :identificador, 
-                  :jerarquia_definitiva, 
-                  :fijo_variable, 
-                  :coordinador,
-                  :electrificadora,
-                  :nic,
-                  :campo_adicional_3,
-                  :campo_adicional_4,
-                  :campo_adicional_5
+attr_accessible :s_id, 
+                :depto, 
+                :municipio, 
+                :nom_sitio, 
+                :direccion, 
+                :identificador, 
+                :jerarquia_definitiva, 
+                :fijo_variable, 
+                :coordinador,
+                :electrificadora,
+                :nic,
+                :campo_adicional_3,
+                :campo_adicional_4,
+                :campo_adicional_5
+
 
   # Callbacks
   before_save :format_attributes
