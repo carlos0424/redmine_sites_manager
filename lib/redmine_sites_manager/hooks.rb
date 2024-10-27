@@ -38,8 +38,6 @@ module RedmineSitesManager
       HTML
     end
 
-
-  
     # Hook para agregar campos personalizados en la vista de detalles de incidencia
     def view_issues_show_details_bottom(context={})
       issue = context[:issue]
@@ -95,7 +93,6 @@ module RedmineSitesManager
         $(function() {
           window.sitesManagerSettings = {
             searchUrl: '#{url_for(controller: 'sites', action: 'search', format: 'json')}',
-            clearUrl: '#{url_for(controller: 'sites', action: 'clear', format: 'json')}',
             customFieldMappings: #{Setting.plugin_redmine_sites_manager['custom_field_mappings'].to_json}
           };
         });
