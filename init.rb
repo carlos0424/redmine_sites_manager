@@ -30,12 +30,5 @@ Redmine::Plugin.register :redmine_sites_manager do
       'campo_adicional_5' => ''
     }
   }, partial: 'settings/sites_manager_settings'
-end
-
-# Registrar hooks para incluir assets
-require_dependency 'redmine_sites_manager/hooks'
-
-# Configurar assets
-Rails.configuration.to_prepare do
-  require_dependency 'redmine_sites_manager/hooks'
+  
 end
