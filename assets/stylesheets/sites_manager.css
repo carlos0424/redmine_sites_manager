@@ -50,4 +50,37 @@
     color: #666;
     font-size: 0.9em;
   }
+  .sites-search-container {
+    margin-bottom: 15px;
+    width: 100%;
+  }
   
+  .sites-search-container p {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .sites-search-container label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 3px;
+  }
+  
+  #sites-search-field {
+    width: 400px;
+    padding: 6px 25px 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+  
+  .sites-clear-btn {
+    position: relative;
+    left: -25px;
+    cursor: pointer;
+    color: #666;
+  }
+  
+  .sites-clear-btn:hover {
+    color: #333;
+  }
