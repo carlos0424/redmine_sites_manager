@@ -1,15 +1,14 @@
 RedmineApp::Application.routes.draw do
   resources :sites do
+    member do
+      patch 'actualizar'  # Cambiado
+      post 'toggle_status'
+    end
     collection do
       get 'search'
-      get 'get_coordinators'
       post 'import'
       get 'download_template'
       post 'bulk_update'
-    end
-    member do
-      post 'toggle_status'
-      post '/update' => 'sites#update'  # Añadir esta línea
     end
   end
 end

@@ -78,9 +78,7 @@ class SitesController < ApplicationController
   def edit
   end
 
-  def update
-    Rails.logger.info "Update params: #{params.inspect}"  # Para debug
-    
+  def actualizar  # Cambiado de update a actualizar
     if @site.update(site_params)
       flash[:notice] = l(:notice_successful_update)
       redirect_to sites_path
@@ -88,11 +86,6 @@ class SitesController < ApplicationController
       load_site_collections
       render :edit
     end
-  rescue => e
-    Rails.logger.error "Update error: #{e.message}"  # Para debug
-    flash[:error] = e.message
-    load_site_collections
-    render :edit
   end
 
   private
