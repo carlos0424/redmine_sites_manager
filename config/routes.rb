@@ -9,7 +9,6 @@ RedmineApp::Application.routes.draw do
     end
     member do
       post 'toggle_status'
-      patch 'update', action: :update  # Cambia 'post' por 'patch'
     end
   end
 end

@@ -2,7 +2,7 @@
 
 <%= form_for @site, 
             url: site_path(@site), 
-            method: :patch,  # Cambiado a PATCH
+            method: :patch, 
             html: { class: 'tabular' } do |f| %>
   
   <%= error_messages_for @site %>
