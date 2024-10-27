@@ -1,11 +1,12 @@
 class SitesController < ApplicationController
   unloadable
 
-  before_action :require_login, except: [:search]
+  before_action :require_login
   before_action :require_admin, except: [:search, :index, :show]
   before_action :find_site, only: [:show, :edit, :update, :destroy, :toggle_status]
   before_action :load_site_collections, only: [:new, :create, :edit, :update]
   before_action :build_site_query, only: [:index]
+  skip_before_action :verify_authenticity_token, only: [:search]
 
   helper :sort
   include SortHelper
@@ -104,6 +105,21 @@ class SitesController < ApplicationController
     end
   end
 
+  def search
+    # No requerir login para la búsqueda
+    return render json: { error: 'Unauthorized' }, status: :unauthorized unless User.current.logged?
+
+    term = params[:term].to_s.strip.downcase
+    @sites = search_sites(term)
+
+    respond_to do |format|
+      format.json { render json: format_sites_for_json(@sites) }
+    end
+  rescue StandardError => e
+    Rails.logger.error "Error en búsqueda de sitios: #{e.message}"
+    render json: { error: e.message }, status: :internal_server_error
+  end
+
   def import
     if request.post? && params[:file].present?
       result = import_sites_from_file
@@ -117,46 +133,6 @@ class SitesController < ApplicationController
     redirect_to import_sites_path
   end
 
-  def search
-    unless User.current.logged?
-      render json: [], status: :forbidden
-      return
-    end
-
-    @sites = FlmSite.where(
-      "LOWER(s_id) LIKE :term OR 
-       LOWER(nom_sitio) LIKE :term OR 
-       LOWER(identificador) LIKE :term OR 
-       LOWER(municipio) LIKE :term OR 
-       LOWER(direccion) LIKE :term OR 
-       LOWER(depto) LIKE :term", 
-      term: "%#{params[:term].to_s.downcase}%"
-    ).limit(10)
-
-    respond_to do |format|
-      format.json { 
-        render json: @sites.map { |site| 
-          {
-            id: site.id,
-            label: "#{site.s_id} - #{site.nom_sitio}",
-            value: site.nom_sitio,
-            site_data: {
-              s_id: site.s_id,
-              nom_sitio: site.nom_sitio,
-              identificador: site.identificador,
-              depto: site.depto,
-              municipio: site.municipio,
-              direccion: site.direccion,
-              jerarquia_definitiva: site.jerarquia_definitiva,
-              fijo_variable: site.fijo_variable,
-              coordinador: site.coordinador
-            }
-          }
-        }
-      }
-    end
-  end
-  
   def toggle_status
     respond_to do |format|
       if @site.toggle_status!
@@ -209,6 +185,39 @@ class SitesController < ApplicationController
       :campo_adicional_1, :campo_adicional_2, :campo_adicional_3,
       :campo_adicional_4, :campo_adicional_5
     )
+  end
+
+  def search_sites(term)
+    FlmSite.where(
+      "LOWER(s_id) LIKE :term OR 
+       LOWER(nom_sitio) LIKE :term OR 
+       LOWER(identificador) LIKE :term OR 
+       LOWER(municipio) LIKE :term OR 
+       LOWER(direccion) LIKE :term OR 
+       LOWER(depto) LIKE :term", 
+      term: "%#{term}%"
+    ).limit(10)
+  end
+
+  def format_sites_for_json(sites)
+    sites.map { |site| 
+      {
+        id: site.id,
+        label: "#{site.s_id} - #{site.nom_sitio}",
+        value: site.nom_sitio,
+        site_data: {
+          s_id: site.s_id,
+          nom_sitio: site.nom_sitio,
+          identificador: site.identificador,
+          depto: site.depto,
+          municipio: site.municipio,
+          direccion: site.direccion,
+          jerarquia_definitiva: site.jerarquia_definitiva,
+          fijo_variable: site.fijo_variable,
+          coordinador: site.coordinador
+        }
+      }
+    }
   end
 
   def build_site_query
