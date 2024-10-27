@@ -95,3 +95,9 @@ es:
   errors:
       coordinador_not_found: "Coordinador no encontrado"
       invalid_coordinador: "Coordinador inválido"
+  search:
+      placeholder: "Buscar por ID, nombre, municipio o dirección..."
+      placeholder: "Buscar por ID, nombre, municipio o dirección..."
+      no_results: "No se encontraron sitios"
+      searching: "Buscando..."
+      select_site: "Seleccione un sitio"
