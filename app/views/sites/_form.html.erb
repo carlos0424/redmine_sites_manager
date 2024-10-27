@@ -69,5 +69,10 @@
     <div class="actions">
       <%= f.submit l(:button_save) %>
     </div>
+    <div class="form-field <%= 'error' if @site.errors.include?(:s_id) %>">
+    <%= f.label :s_id, l('plugin_sites_manager.fields.s_id'), required: true %>
+    <%= f.text_field :s_id, size: 20, maxlength: 20, required: true %>
+    <%= error_messages_for_field :s_id, @site %>
+  </div>
   <% end %>
   
