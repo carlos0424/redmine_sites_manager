@@ -4,122 +4,72 @@
 <div class="sites-manager-settings">
   <%= form_tag(plugin_settings_path(@plugin), method: :post) do %>
     <div class="box tabular settings">
-      <div class="settings-container">
-        <!-- Panel de navegación -->
-        <div class="settings-nav">
-          <ul>
-            <li class="active">
-              <a href="#general-settings">
-                <%= l('plugin_sites_manager.settings.general') %>
-              </a>
-            </li>
-            <li>
-              <a href="#field-mappings">
-                <%= l('plugin_sites_manager.settings.fields_mapping') %>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Contenido de configuración -->
-        <div class="settings-content">
-          <!-- Configuración General -->
-          <div id="general-settings" class="settings-section active">
-            <h3 class="settings-title">
-              <%= l('plugin_sites_manager.settings.title') %>
-            </h3>
-            <div class="settings-group">
-              <div class="form-field">
-                <label><%= l('plugin_sites_manager.settings.scope') %></label>
-                <%= select_tag 'settings[scope]', 
-                    options_for_select([
-                      [l('plugin_sites_manager.settings.global'), 'global'],
-                      [l('plugin_sites_manager.settings.by_project'), 'project']
-                    ], @settings['scope']),
-                    class: 'select-scope' %>
-              </div>
-            </div>
-          </div>
-
-          <!-- Mapeo de Campos -->
-          <div id="field-mappings" class="settings-section">
-            <h3 class="settings-title">
-              <%= l('plugin_sites_manager.settings.custom_fields_mapping') %>
-            </h3>
-            <div class="settings-group custom-fields-grid">
-              <% custom_fields = CustomField.where(type: 'IssueCustomField').map { |cf| [cf.name, cf.id] } %>
-              
-              <!-- Campos Principales -->
-              <div class="fields-section">
-                <h4><%= l('plugin_sites_manager.settings.main_fields') %></h4>
-                <% ['s_id', 'nom_sitio', 'identificador'].each do |field| %>
-                  <div class="form-field required">
-                    <label><%= l("plugin_sites_manager.fields.#{field}") %></label>
-                    <%= select_tag "settings[custom_fields_mapping][#{field}]", 
-                        options_for_select(custom_fields, @settings.dig('custom_fields_mapping', field)),
-                        include_blank: true,
-                        class: 'select2-field',
-                        data: { placeholder: l(:label_select_option) } %>
-                    <% if field == 's_id' %>
-                      <em class="info"><%= l('plugin_sites_manager.settings.s_id_info') %></em>
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-
-              <!-- Campos de Ubicación -->
-              <div class="fields-section">
-                <h4><%= l('plugin_sites_manager.settings.location_fields') %></h4>
-                <% ['depto', 'municipio', 'direccion'].each do |field| %>
-                  <div class="form-field">
-                    <label><%= l("plugin_sites_manager.fields.#{field}") %></label>
-                    <%= select_tag "settings[custom_fields_mapping][#{field}]", 
-                        options_for_select(custom_fields, @settings.dig('custom_fields_mapping', field)),
-                        include_blank: true,
-                        class: 'select2-field',
-                        data: { placeholder: l(:label_select_option) } %>
-                  </div>
-                <% end %>
-              </div>
-
-              <!-- Campos de Características -->
-              <div class="fields-section">
-                <h4><%= l('plugin_sites_manager.settings.characteristic_fields') %></h4>
-                <% ['jerarquia_definitiva', 'fijo_variable', 'coordinador'].each do |field| %>
-                  <div class="form-field">
-                    <label><%= l("plugin_sites_manager.fields.#{field}") %></label>
-                    <%= select_tag "settings[custom_fields_mapping][#{field}]", 
-                        options_for_select(custom_fields, @settings.dig('custom_fields_mapping', field)),
-                        include_blank: true,
-                        class: 'select2-field',
-                        data: { placeholder: l(:label_select_option) } %>
-                  </div>
-                <% end %>
-              </div>
-
-              <!-- Campos Adicionales -->
-              <div class="fields-section">
-                <h4><%= l('plugin_sites_manager.settings.additional_fields') %></h4>
-                <% (1..5).each do |i| %>
-                  <div class="form-field">
-                    <label><%= l("plugin_sites_manager.fields.campo_adicional_#{i}") %></label>
-                    <%= select_tag "settings[custom_fields_mapping][campo_adicional_#{i}]", 
-                        options_for_select(custom_fields, @settings.dig('custom_fields_mapping', "campo_adicional_#{i}")),
-                        include_blank: true,
-                        class: 'select2-field',
-                        data: { placeholder: l(:label_select_option) } %>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Configuración General -->
+      <h3><%= l('plugin_sites_manager.settings.title') %></h3>
+      
+      <div class="form-field">
+        <p>
+          <label><%= l('plugin_sites_manager.settings.scope') %></label>
+          <%= select_tag 'settings[scope]', 
+              options_for_select([
+                [l('plugin_sites_manager.settings.global'), 'global'],
+                [l('plugin_sites_manager.settings.by_project'), 'project']
+              ], @settings['scope']) %>
+        </p>
       </div>
 
-      <div class="settings-footer">
-        <%= submit_tag l(:button_save), 
-            class: 'button-positive',
-            data: { disable_with: l(:button_saving) } %>
+      <!-- Mapeo de Campos -->
+      <h3><%= l('plugin_sites_manager.settings.custom_fields_mapping') %></h3>
+      
+      <% custom_fields = CustomField.where(type: 'IssueCustomField').map { |cf| [cf.name, cf.id] } %>
+      
+      <!-- Campos Principales -->
+      <h4><%= l('plugin_sites_manager.settings.main_fields') %></h4>
+      <% ['s_id', 'nom_sitio', 'identificador'].each do |field| %>
+        <p>
+          <label><%= l("plugin_sites_manager.fields.#{field}") %> <span class="required">*</span></label>
+          <%= select_tag "settings[custom_fields_mapping][#{field}]", 
+              options_for_select(custom_fields, @settings.dig('custom_fields_mapping', field)),
+              include_blank: true %>
+        </p>
+      <% end %>
+
+      <!-- Campos de Ubicación -->
+      <h4><%= l('plugin_sites_manager.settings.location_fields') %></h4>
+      <% ['depto', 'municipio', 'direccion'].each do |field| %>
+        <p>
+          <label><%= l("plugin_sites_manager.fields.#{field}") %></label>
+          <%= select_tag "settings[custom_fields_mapping][#{field}]", 
+              options_for_select(custom_fields, @settings.dig('custom_fields_mapping', field)),
+              include_blank: true %>
+        </p>
+      <% end %>
+
+      <!-- Campos de Características -->
+      <h4><%= l('plugin_sites_manager.settings.characteristic_fields') %></h4>
+      <% ['jerarquia_definitiva', 'fijo_variable', 'coordinador'].each do |field| %>
+        <p>
+          <label><%= l("plugin_sites_manager.fields.#{field}") %></label>
+          <%= select_tag "settings[custom_fields_mapping][#{field}]", 
+              options_for_select(custom_fields, @settings.dig('custom_fields_mapping', field)),
+              include_blank: true %>
+        </p>
+      <% end %>
+
+      <!-- Campos Adicionales -->
+      <h4><%= l('plugin_sites_manager.settings.additional_fields') %></h4>
+      <% (1..5).each do |i| %>
+        <p>
+          <label><%= l("plugin_sites_manager.fields.campo_adicional_#{i}") %></label>
+          <%= select_tag "settings[custom_fields_mapping][campo_adicional_#{i}]", 
+              options_for_select(custom_fields, @settings.dig('custom_fields_mapping', "campo_adicional_#{i}")),
+              include_blank: true %>
+        </p>
+      <% end %>
+
+      <!-- Botones de acción -->
+      <div class="form-actions">
+        <%= submit_tag l(:button_save), class: 'button-positive' %>
         <%= link_to l(:button_cancel), 
             { controller: 'settings', action: 'plugin', id: 'redmine_sites_manager' }, 
             class: 'button' %>
@@ -129,229 +79,44 @@
 </div>
 
 <% content_for :header_tags do %>
-  <%= javascript_include_tag 'select2.min', plugin: 'redmine_sites_manager' %>
-  <%= stylesheet_link_tag 'select2.min', plugin: 'redmine_sites_manager' %>
-  
   <style>
     .sites-manager-settings {
       margin: 20px 0;
     }
-
-    .settings-container {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 20px;
+    .sites-manager-settings h3 {
+      margin-bottom: 15px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #ccc;
     }
-
-    .settings-nav {
-      flex: 0 0 200px;
-      border-right: 1px solid #e0e0e0;
-    }
-
-    .settings-nav ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .settings-nav li {
-      margin: 0;
-      padding: 0;
-    }
-
-    .settings-nav a {
-      display: block;
-      padding: 10px 15px;
+    .sites-manager-settings h4 {
+      margin: 20px 0 10px 0;
       color: #666;
-      text-decoration: none;
-      border-left: 3px solid transparent;
-      transition: all 0.2s ease;
     }
-
-    .settings-nav li.active a {
-      background: #f8f9fa;
-      color: #2996cc;
-      border-left-color: #2996cc;
+    .sites-manager-settings p {
+      margin-bottom: 10px;
+      padding: 5px 0;
     }
-
-    .settings-content {
-      flex: 1;
-      min-width: 0; /* Previene desbordamiento en flex */
-    }
-
-    .settings-title {
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #e0e0e0;
-      font-size: 16px;
-      color: #333;
-    }
-
-    .settings-group {
-      margin-bottom: 30px;
-    }
-
-    .custom-fields-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-    }
-
-    .fields-section {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .fields-section h4 {
-      margin-bottom: 15px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 600;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .form-field {
-      margin-bottom: 15px;
-    }
-
-    .form-field.required label:after {
-      content: " *";
-      color: #dc3545;
-    }
-
-    .form-field label {
+    .sites-manager-settings label {
       display: block;
-      margin-bottom: 5px;
-      font-weight: 600;
-      color: #555;
+      margin-bottom: 3px;
+      font-weight: bold;
     }
-
-    .form-field select {
+    .sites-manager-settings select {
       width: 100%;
-      padding: 6px;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      background-color: white;
+      max-width: 400px;
+      padding: 4px;
     }
-
-    .form-field .info {
-      display: block;
-      margin-top: 5px;
-      color: #666;
-      font-size: 0.9em;
+    .required {
+      color: #d00;
     }
-
-    .settings-footer {
+    .form-actions {
       margin-top: 20px;
       padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
+      border-top: 1px solid #ccc;
       text-align: right;
     }
-
     .button-positive {
       margin-left: 10px;
     }
-
-    .select-scope {
-      width: 300px;
-    }
-
-    /* Select2 personalización */
-    .select2-container {
-      width: 100% !important;
-    }
-
-    .select2-container--default .select2-selection--single {
-      border-color: #ddd;
-      height: 34px;
-      line-height: 34px;
-    }
-
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-      line-height: 34px;
-    }
-
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-      height: 32px;
-    }
-
-    /* Responsive */
-    @media (max-width: 1200px) {
-      .custom-fields-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .settings-container {
-        flex-direction: column;
-      }
-
-      .settings-nav {
-        flex: none;
-        border-right: none;
-        border-bottom: 1px solid #e0e0e0;
-        margin-bottom: 20px;
-      }
-
-      .custom-fields-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .select-scope {
-        width: 100%;
-      }
-    }
   </style>
-
-  <script>
-    $(function() {
-      // Inicializar Select2 en todos los selectores
-      $('.select2-field').select2({
-        width: '100%',
-        allowClear: true
-      });
-
-      // Ocultar todas las secciones excepto la activa
-      $('.settings-section:not(.active)').hide();
-
-      // Navegación entre pestañas
-      $('.settings-nav a').click(function(e) {
-        e.preventDefault();
-        const target = $(this).attr('href');
-        
-        // Actualizar navegación
-        $('.settings-nav li').removeClass('active');
-        $(this).parent().addClass('active');
-        
-        // Mostrar sección correspondiente con animación
-        $('.settings-section').hide();
-        $(target).fadeIn(300);
-      });
-
-      // Validación del formulario
-      $('form').submit(function() {
-        let valid = true;
-        $('.form-field.required select').each(function() {
-          if (!$(this).val()) {
-            valid = false;
-            $(this).closest('.form-field').addClass('error');
-          }
-        });
-
-        if (!valid) {
-          alert('<%= l("plugin_sites_manager.messages.required_fields") %>');
-          return false;
-        }
-      });
-
-      // Limpiar indicadores de error al cambiar selección
-      $('.form-field.required select').change(function() {
-        $(this).closest('.form-field').removeClass('error');
-      });
-    });
-  </script>
 <% end %>
