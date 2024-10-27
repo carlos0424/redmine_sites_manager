@@ -50,6 +50,31 @@ $(function() {
       .appendTo(ul);
   };
 
+  $('.select2').select2({
+    width: '100%',
+    placeholder: 'Seleccione un coordinador',
+    allowClear: true
+  });
+
+  // Formatear automáticamente el S ID
+  $('#flm_site_s_id').on('blur', function() {
+    var value = $(this).val().trim().toUpperCase();
+    if (value && !value.startsWith('S')) {
+      value = 'S' + value;
+    }
+    $(this).val(value);
+  });
+
+  // Formatear automáticamente la jerarquía
+  $('#flm_site_jerarquia_definitiva').on('blur', function() {
+    var value = $(this).val().trim().toUpperCase();
+    if (value && !value.startsWith('B_')) {
+      value = 'B_' + value;
+    }
+    $(this).val(value);
+  });
+  
+
   // Agregar botón de limpiar
   const $searchContainer = $('#sites-search-field').parent();
   const $clearButton = $('<span>', {
@@ -67,3 +92,4 @@ $(function() {
 
   $clearButton.on('click', clearFields);
 });
+

@@ -46,6 +46,15 @@ attr_accessible :s_id,
     where("LOWER(s_id) LIKE :term OR LOWER(nom_sitio) LIKE :term OR LOWER(identificador) LIKE :term", 
           term: "%#{term}%")
   end
+
+  validates :coordinador, inclusion: { 
+    in: proc { User.active.joins(:members => :roles)
+                   .where(roles: { name: 'Coordinador' })
+                   .pluck(:firstname, :lastname)
+                   .map { |f, l| "#{f} #{l}".strip } },
+    allow_blank: true,
+    message: "debe ser un coordinador válido"
+  }
   
   def self.import_from_excel(file_path)
     require 'roo'

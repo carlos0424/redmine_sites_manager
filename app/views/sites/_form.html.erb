@@ -51,13 +51,15 @@
 </p>
     </div>
 
-    <div class="splitcontentright">
-      <p>
-        <%= f.label :coordinador, l('plugin_sites_manager.fields.coordinador') %>
-        <%= f.text_field :coordinador %>
-      </p>
-    </div>
-  </div>
+<div class="splitcontentright">
+  <p>
+    <%= f.label :coordinador, l('plugin_sites_manager.fields.coordinador') %>
+    <%= f.select :coordinador,
+        @coordinadores.map { |u| [u.name, u.name] },
+        { include_blank: true },
+        { class: 'select2' } %>
+  </p>
+</div>
 
   <fieldset class="box">
     <legend>Campos Adicionales</legend>

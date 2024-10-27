@@ -176,6 +176,13 @@ class SitesController < ApplicationController
     @departamentos = FlmSite.distinct.pluck(:depto).compact.sort
     @municipios = FlmSite.distinct.pluck(:municipio).compact.sort
     @jerarquias = FlmSite.distinct.pluck(:jerarquia_definitiva).compact.sort
+    
+    # Obtener usuarios con rol coordinador
+    coordinador_role = Role.find_by(name: 'Coordinador')
+    @coordinadores = User.active.joins(:members => :roles)
+                        .where(roles: { id: coordinador_role.id })
+                        .distinct
+                        .order(:firstname)
   end
 
   def site_params
