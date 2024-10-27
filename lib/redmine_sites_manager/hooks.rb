@@ -9,29 +9,25 @@ module RedmineSitesManager
 
     # Hook para agregar el campo de búsqueda de sitios en el formulario de incidencias
     def view_issues_form_details_top(context={})
-      return '' unless show_site_search?(context[:issue])
-      
-      html = <<-HTML
-        <div class="sites-search-container">
-          <p>
-            <label>#{l('plugin_sites_manager.sites.search_label')}</label>
-            <input type="text" 
-                   id="sites-search-field" 
-                   class="sites-autocomplete" 
-                   placeholder="#{l('plugin_sites_manager.search.placeholder')}"
-                   autocomplete="off" />
-            <span class="sites-clear-btn" 
-                  title="#{l('plugin_sites_manager.sites.clear_selection')}">×</span>
-          </p>
-          <div class="sites-preview" style="display: none;">
-            <div class="selected-site-info"></div>
-          </div>
-          #{render_initialization_script}
-        </div>
-      HTML
-      
-      html.html_safe
-    end
+    return '' unless context[:issue]
+    
+    html = <<-HTML
+      <div class="sites-search-container">
+        <p>
+          <label>#{l('plugin_sites_manager.search.label')}</label>
+          <input type="text" 
+                 id="sites-search-field" 
+                 class="sites-autocomplete" 
+                 placeholder="#{l('plugin_sites_manager.search.placeholder')}"
+                 autocomplete="off" />
+          <span class="sites-clear-btn" 
+                title="#{l('plugin_sites_manager.sites.clear_selection')}">×</span>
+        </p>
+      </div>
+    HTML
+    
+    html.html_safe
+  end
 
     # Hook para agregar campos personalizados adicionales específicos de sitios
     def view_custom_fields_form_upper_box(context={})
