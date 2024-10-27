@@ -56,8 +56,8 @@ class SitesController < ApplicationController
   end
 
   def create
-    @site = FlmSite.new(process_site_params)
-  
+    @site = FlmSite.new(site_params)
+
     respond_to do |format|
       if @site.save
         format.html do
@@ -72,30 +72,25 @@ class SitesController < ApplicationController
       end
     end
   end
-  
-  private
 
   def edit
   end
 
   def update
-    Rails.logger.info "Update params: #{params.inspect}"  # Para debug
-    
-    if @site.update(site_params)
-      flash[:notice] = l(:notice_successful_update)
-      redirect_to sites_path
-    else
-      load_site_collections
-      render :edit
+    respond_to do |format|
+      if @site.update(site_params)
+        format.html do
+          flash[:notice] = l(:notice_successful_update)
+          redirect_to sites_path
+        end
+        format.json { render json: @site.to_json_for_details }
+      else
+        load_site_collections
+        format.html { render :edit }
+        format.json { render json: { errors: @site.errors.full_messages }, status: :unprocessable_entity }
+      end
     end
-  rescue => e
-    Rails.logger.error "Update error: #{e.message}"  # Para debug
-    flash[:error] = e.message
-    load_site_collections
-    render :edit
   end
-
-  private
 
   def destroy
     if @site.destroy
@@ -181,16 +176,8 @@ class SitesController < ApplicationController
     @departamentos = FlmSite.distinct.pluck(:depto).compact.sort
     @municipios = FlmSite.distinct.pluck(:municipio).compact.sort
     @jerarquias = FlmSite.distinct.pluck(:jerarquia_definitiva).compact.sort
-    
-    # Obtener usuarios con rol coordinador
-    @coordinador_role ||= Role.find_by(name: 'Coordinador')
-    @coordinadores = User.active
-                        .joins(:members => :roles)
-                        .where(roles: { id: @coordinador_role.id })
-                        .distinct
-                        .order(:firstname)
-                        .map { |u| ["#{u.firstname} #{u.lastname}", u.id] }  # Mapear a [nombre, id]
   end
+
   def site_params
     params.require(:flm_site).permit(
       :s_id, :depto, :municipio, :nom_sitio, :direccion, :identificador,
@@ -200,20 +187,6 @@ class SitesController < ApplicationController
     )
   end
   
-  def process_site_params
-    processed_params = site_params.to_h
-    
-    # Convertir el ID del coordinador al nombre completo del usuario si es necesario
-    if processed_params[:coordinador].present? && processed_params[:coordinador].match?(/^\d+$/)
-      user = User.find_by(id: processed_params[:coordinador])
-      if user
-        processed_params[:coordinador] = "#{user.firstname} #{user.lastname}".strip
-      end
-    end
-
-    processed_params
-  end
-
 
   def search_sites(term)
     FlmSite.where(
@@ -229,18 +202,7 @@ class SitesController < ApplicationController
   end
 
   def format_sites_for_json(sites)
-    coordinador_role = Role.find_by(name: 'Coordinador')
-    
-    sites.map do |site|
-      # Buscar el ID del coordinador
-      coordinador_user = if site.coordinador.present?
-        User.active
-            .joins(:members => :roles)
-            .where(roles: { id: coordinador_role.id })
-            .where("CONCAT(firstname, ' ', lastname) LIKE ?", "%#{site.coordinador}%")
-            .first
-      end
-  
+    sites.map { |site| 
       {
         id: site.id,
         label: "#{site.s_id} - #{site.nom_sitio}",
@@ -254,12 +216,12 @@ class SitesController < ApplicationController
           direccion: site.direccion,
           jerarquia_definitiva: site.jerarquia_definitiva,
           fijo_variable: site.fijo_variable,
-          coordinador: coordinador_user&.id.to_s,  # Enviamos el ID del usuario
+          coordinador: site.coordinador,
           electrificadora: site.electrificadora,
           nic: site.nic
         }
       }
-    end
+    }
   end
 
   def build_site_query

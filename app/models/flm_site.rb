@@ -9,25 +9,22 @@ class FlmSite < ActiveRecord::Base
   validates :nom_sitio, presence: true
   #validates :fijo_variable, inclusion: { in: FIJO_VARIABLE_OPTIONS }, allow_nil: true
   #validates :jerarquia_definitiva, format: { with: /\AB_[1-9]\z/, message: "debe tener el formato B_N donde N es un número" }, allow_nil: true
-  validates :coordinador, presence: true
-
   
   # Atributos accesibles
-attr_accessible :s_id, 
-                :depto, 
-                :municipio, 
-                :nom_sitio, 
-                :direccion, 
-                :identificador, 
-                :jerarquia_definitiva, 
-                :fijo_variable, 
-                :coordinador,
-                :electrificadora,
-                :nic,
-                :campo_adicional_3,
-                :campo_adicional_4,
-                :campo_adicional_5
-
+  attr_accessible :s_id, 
+                  :depto, 
+                  :municipio, 
+                  :nom_sitio, 
+                  :direccion, 
+                  :identificador, 
+                  :jerarquia_definitiva, 
+                  :fijo_variable, 
+                  :coordinador,
+                  :electrificadora,
+                  :nic,
+                  :campo_adicional_3,
+                  :campo_adicional_4,
+                  :campo_adicional_5
 
   # Callbacks
   before_save :format_attributes
@@ -48,23 +45,6 @@ attr_accessible :s_id,
     where("LOWER(s_id) LIKE :term OR LOWER(nom_sitio) LIKE :term OR LOWER(identificador) LIKE :term", 
           term: "%#{term}%")
   end
-  
-  def process_coordinador
-    # Si el coordinador es un ID, convertirlo a nombre
-    if coordinador.present? && coordinador.match?(/^\d+$/)
-      user = User.find_by(id: coordinador)
-      self.coordinador = user ? "#{user.firstname} #{user.lastname}".strip : nil
-    end
-  end
-
-  validates :coordinador, inclusion: { 
-    in: proc { User.active.joins(:members => :roles)
-                   .where(roles: { name: 'Coordinador' })
-                   .pluck(:firstname, :lastname)
-                   .map { |f, l| "#{f} #{l}".strip } },
-    allow_blank: true,
-    message: "debe ser un coordinador válido"
-  }
   
   def self.import_from_excel(file_path)
     require 'roo'
@@ -190,33 +170,5 @@ attr_accessible :s_id,
     return unless s_id
     self.s_id = s_id.to_s.strip.upcase
     self.s_id = "S#{s_id}" if s_id =~ /^\d+$/
-  end
-
-  def find_coordinador_user
-    return nil if coordinador.blank?
-    @coordinador_role ||= Role.find_by(name: 'Coordinador')
-    return nil unless @coordinador_role
-
-    User.active
-        .joins(:members => :roles)
-        .where(roles: { id: @coordinador_role.id })
-        .where("CONCAT(firstname, ' ', lastname) LIKE ?", "%#{coordinador}%")
-        .first
-  end
-
-  def coordinador_id
-    find_coordinador_user&.id
-  end
-
-  def self.coordinadores_collection
-    role = Role.find_by(name: 'Coordinador')
-    return [] unless role
-
-    User.active
-        .joins(:members => :roles)
-        .where(roles: { id: role.id })
-        .distinct
-        .order(:firstname)
-        .map { |u| [u.name, u.id.to_s] }
   end
 end
