@@ -1,14 +1,14 @@
 Redmine::Plugin.register :redmine_sites_manager do
-  name 'Sites Manager'
+  name I18n.t('plugin_sites_manager.name')
   author 'Carlos Arbelaez'
   description 'Plugin para gestión y búsqueda de sitios FLM'
   version '1.0.0'
 
   menu :admin_menu, :sites_manager, 
        { controller: 'settings', action: 'plugin', id: 'redmine_sites_manager' },
-       caption: :plugin_sites_manager_name,
+       caption: I18n.t('plugin_sites_manager.name'),
        html: { class: 'icon icon-package' }
-  
+       
   settings default: {
     'custom_fields_mapping' => {
       'sitio' => '',
