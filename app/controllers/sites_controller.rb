@@ -80,7 +80,7 @@ class SitesController < ApplicationController
 
   def update
     respond_to do |format|
-      if @site.update(site_params)
+      if @site.update(process_site_params)
         format.html do
           flash[:notice] = l(:notice_successful_update)
           redirect_to sites_path
@@ -93,6 +93,8 @@ class SitesController < ApplicationController
       end
     end
   end
+
+  private
 
   def destroy
     if @site.destroy
@@ -197,20 +199,21 @@ class SitesController < ApplicationController
       :campo_adicional_4, :campo_adicional_5
     )
   end
-  
+
   def process_site_params
     processed_params = site_params.to_h
     
-    # Convertir el ID del coordinador al nombre completo del usuario
-    if processed_params[:coordinador].present?
+    # Convertir el ID del coordinador al nombre completo del usuario si es necesario
+    if processed_params[:coordinador].present? && processed_params[:coordinador].match?(/^\d+$/)
       user = User.find_by(id: processed_params[:coordinador])
       if user
         processed_params[:coordinador] = "#{user.firstname} #{user.lastname}".strip
       end
     end
-  
+
     processed_params
   end
+
 
   def search_sites(term)
     FlmSite.where(

@@ -9,6 +9,8 @@ RedmineApp::Application.routes.draw do
     end
     member do
       post 'toggle_status'
+      patch 'update'  # Añadir la ruta para update
+      put 'update'    # También permitir PUT para compatibilidad
     end
   end
 end
