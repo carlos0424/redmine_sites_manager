@@ -1,7 +1,6 @@
 class SitesController < ApplicationController
   unloadable
 
-  # Requerir login y acceso de administrador para todas las acciones excepto 'search'
   before_action :require_login
   before_action :require_admin, except: [:search, :index, :show]
   before_action :find_site, only: [:show, :edit, :update, :destroy, :toggle_status]
@@ -27,9 +26,20 @@ class SitesController < ApplicationController
       format.html
       format.json { render json: { sites: @sites, total: @site_count } }
       format.api
-      format.csv { send_data export_to_csv(@sites), filename: "sites-#{Date.today}.csv" }
-      format.xlsx { send_data export_to_xlsx(@sites), filename: "sites-#{Date.today}.xlsx" }
+      format.csv { 
+        send_data export_to_csv(@sites), 
+        filename: "sites-#{Date.today}.csv",
+        type: 'text/csv; charset=utf-8'
+      }
+      format.xlsx { 
+        send_data export_to_xlsx(@sites), 
+        filename: "sites-#{Date.today}.xlsx",
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }
     end
+  rescue StandardError => e
+    flash[:error] = e.message
+    redirect_to sites_path
   end
 
   def show
@@ -55,13 +65,15 @@ class SitesController < ApplicationController
         end
         format.json { render json: @site.to_json_for_details, status: :created }
       else
+        load_site_collections
         format.html { render :new }
         format.json { render json: { errors: @site.errors.full_messages }, status: :unprocessable_entity }
       end
     end
   end
 
-  def edit; end
+  def edit
+  end
 
   def update
     respond_to do |format|
@@ -100,9 +112,15 @@ class SitesController < ApplicationController
     else
       render :import
     end
+  rescue StandardError => e
+    flash[:error] = "#{l('plugin_sites_manager.messages.import_error')}: #{e.message}"
+    redirect_to import_sites_path
   end
 
   def search
+    # Asegurarse de que el término de búsqueda no esté vacío
+    return render json: [] if params[:term].blank?
+
     @sites = FlmSite.where(
       "LOWER(s_id) LIKE :term OR 
        LOWER(nom_sitio) LIKE :term OR 
@@ -110,7 +128,7 @@ class SitesController < ApplicationController
        LOWER(municipio) LIKE :term OR 
        LOWER(direccion) LIKE :term OR 
        LOWER(depto) LIKE :term", 
-      term: "%#{params[:term].downcase}%"
+      term: "%#{params[:term].to_s.downcase.strip}%"
     ).limit(10)
 
     respond_to do |format|
@@ -135,8 +153,9 @@ class SitesController < ApplicationController
         }
       }
     end
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
-end
 
   def toggle_status
     respond_to do |format|
@@ -157,12 +176,15 @@ end
   end
 
   def bulk_update
-    if params[:ids].present? && params[:action_name].present?
-      perform_bulk_update
-    else
+    if params[:ids].blank? || params[:action_name].blank?
       flash[:error] = l('plugin_sites_manager.messages.no_selection')
+      return redirect_to sites_path
     end
 
+    perform_bulk_update
+    redirect_to sites_path
+  rescue StandardError => e
+    flash[:error] = e.message
     redirect_to sites_path
   end
 
@@ -222,19 +244,30 @@ end
   end
 
   def import_sites_from_file
+    raise l('plugin_sites_manager.messages.no_file') unless params[:file].present?
+    raise l('plugin_sites_manager.messages.invalid_file_type') unless valid_import_file?(params[:file])
+
     FlmSite.import_from_excel(params[:file].path)
-  rescue => e
-    { error: e.message }
+  end
+
+  def valid_import_file?(file)
+    extension = File.extname(file.original_filename).downcase
+    %w[.xls .xlsx].include?(extension)
   end
 
   def set_import_flash_message(result)
     if result[:error]
       flash[:error] = "#{l('plugin_sites_manager.messages.import_error')}: #{result[:error]}"
     elsif result[:failed].to_i > 0
-      flash[:warning] = l('plugin_sites_manager.messages.import_partial', imported: result[:imported], updated: result[:updated], failed: result[:failed])
+      flash[:warning] = l('plugin_sites_manager.messages.import_partial', 
+                         imported: result[:imported], 
+                         updated: result[:updated], 
+                         failed: result[:failed])
       session[:import_errors] = result[:errors]
     else
-      flash[:notice] = l('plugin_sites_manager.messages.import_success', imported: result[:imported], updated: result[:updated])
+      flash[:notice] = l('plugin_sites_manager.messages.import_success', 
+                        imported: result[:imported], 
+                        updated: result[:updated])
     end
   end
 
@@ -249,8 +282,8 @@ end
     when 'delete'
       FlmSite.where(id: params[:ids]).destroy_all
       flash[:notice] = l('plugin_sites_manager.messages.bulk_delete_success')
+    else
+      flash[:error] = l('plugin_sites_manager.messages.invalid_action')
     end
-  rescue => e
-    flash[:error] = e.message
   end
 end
