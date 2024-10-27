@@ -9,8 +9,8 @@ $(function() {
     6: 'jerarquia_definitiva',
     7: 'fijo_variable',
     9: 'coordinador',
-    25: 'Electrificadora',
-    26: 'NIC'
+    25: 'electrificadora',
+    26: 'nic'
   };
 
   $('#sites-search-field').autocomplete({

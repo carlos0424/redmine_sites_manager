@@ -216,8 +216,8 @@ class SitesController < ApplicationController
           jerarquia_definitiva: site.jerarquia_definitiva,
           fijo_variable: site.fijo_variable,
           coordinador: site.coordinador,
-          Electrificadora: site.Electrificadora,
-          NIC: site.NIC
+          electrificadora: site.electrificadora,
+          nic: site.nic
         }
       }
     }

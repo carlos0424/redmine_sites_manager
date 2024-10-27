@@ -27,8 +27,8 @@ Redmine::Plugin.register :redmine_sites_manager do
       'jerarquia_definitiva' => '',
       'municipio' => '',
       'coordinador' => '',
-      'Electrificadora' => '',
-      'NIC' => '',
+      'electrificadora' => '',
+      'nic' => '',
       'campo_adicional_3' => '',
       'campo_adicional_4' => '',
       'campo_adicional_5' => ''

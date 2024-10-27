@@ -20,8 +20,8 @@ class FlmSite < ActiveRecord::Base
                   :jerarquia_definitiva, 
                   :fijo_variable, 
                   :coordinador,
-                  :Electrificadora,
-                  :NIC,
+                  :electrificadora,
+                  :nic,
                   :campo_adicional_3,
                   :campo_adicional_4,
                   :campo_adicional_5
@@ -71,8 +71,8 @@ class FlmSite < ActiveRecord::Base
       'jerarquia_definitiva' => header.index('jerarquia definitiva'),
       'fijo_variable' => header.index('fijo / variable'),
       'coordinador' => header.index('coordinador'),
-      'Electrificadora' => header.index('Electrificadora'),
-      'NIC' => header.index('NIC'),
+      'electrificadora' => header.index('electrificadora'),
+      'nic' => header.index('nic'),
       'campo_adicional_3' => header.index('campo adicional 3'),
       'campo_adicional_4' => header.index('campo adicional 4'),
       'campo_adicional_5' => header.index('campo adicional 5')
@@ -148,8 +148,8 @@ class FlmSite < ActiveRecord::Base
         jerarquia_definitiva: jerarquia_definitiva,
         fijo_variable: fijo_variable,
         coordinador: coordinador,
-        Electrificadora: Electrificadora,
-        NIC: NIC,
+        electrificadora: electrificadora,
+        nic: nic,
         campo_adicional_3: campo_adicional_3,
         campo_adicional_4: campo_adicional_4,
         campo_adicional_5: campo_adicional_5

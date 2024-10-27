@@ -11,10 +11,10 @@ class CreateFlmSites < ActiveRecord::Migration[5.2]
         t.string :jerarquia_definitiva
         t.string :fijo_variable
         t.string :coordinador
+        t.string :electrificadora
+        t.string :nic
         
         # Campos adicionales para futuro crecimiento
-        t.string :campo_adicional_1
-        t.string :campo_adicional_2
         t.string :campo_adicional_3
         t.string :campo_adicional_4
         t.string :campo_adicional_5
