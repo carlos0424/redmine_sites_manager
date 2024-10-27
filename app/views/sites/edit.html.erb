@@ -1,7 +1,9 @@
 <%# /app/views/sites/edit.html.erb %>
 <h2><%= l('plugin_sites_manager.sites.edit') %></h2>
 
-<%= form_with(model: @site, url: site_path(@site), method: :patch, local: true) do |f| %>
+<%= form_with(model: @site, url: site_path(@site), method: :patch, local: true, html: { class: 'tabular' }) do |f| %>
+  <%= error_messages_for @site %>
+  
   <%= render partial: 'form', locals: { f: f } %>
   
   <div class="buttons">

@@ -1,11 +1,11 @@
-<%# /app/views/sites/_form.html.erb %>
+<%# app/views/sites/_form.html.erb %>
 <div class="box tabular">
   <div class="splitcontent">
     <div class="splitcontentleft">
-      <p class="<%= 'error' if @site.errors.include?(:s_id) %>">
+      <p class="<%= @site.errors.include?(:s_id) ? 'error' : '' %>">
         <%= f.label :s_id, l('plugin_sites_manager.fields.s_id'), required: true %>
         <%= f.text_field :s_id, size: 20, maxlength: 20, required: true %>
-        <%= @site.errors.full_messages_for(:s_id).join(", ") if @site.errors.include?(:s_id) %>
+        <%= content_tag('span', @site.errors.full_messages_for(:s_id).join(', '), class: 'error') if @site.errors.include?(:s_id) %>
       </p>
 
       <p>
@@ -20,20 +20,15 @@
     </div>
 
     <div class="splitcontentright">
-      <p class="<%= 'error' if @site.errors.include?(:nom_sitio) %>">
+      <p class="<%= @site.errors.include?(:nom_sitio) ? 'error' : '' %>">
         <%= f.label :nom_sitio, l('plugin_sites_manager.fields.nom_sitio'), required: true %>
         <%= f.text_field :nom_sitio, required: true %>
-        <%= @site.errors.full_messages_for(:nom_sitio).join(", ") if @site.errors.include?(:nom_sitio) %>
+        <%= content_tag('span', @site.errors.full_messages_for(:nom_sitio).join(', '), class: 'error') if @site.errors.include?(:nom_sitio) %>
       </p>
 
       <p>
         <%= f.label :direccion, l('plugin_sites_manager.fields.direccion') %>
         <%= f.text_field :direccion %>
-      </p>
-
-      <p>
-        <%= f.label :identificador, l('plugin_sites_manager.fields.identificador') %>
-        <%= f.text_field :identificador %>
       </p>
     </div>
   </div>

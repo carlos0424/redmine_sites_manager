@@ -68,10 +68,11 @@ class SitesController < ApplicationController
       if @site.update(site_params)
         format.html {
           flash[:notice] = l(:notice_successful_update)
-          redirect_to sites_path
+          redirect_to sites_path and return # Asegurar redirección inmediata
         }
         format.json { render json: @site.to_json_for_details }
       else
+        load_site_collections # Cargar colecciones necesarias
         format.html { render :edit }
         format.json { render json: { errors: @site.errors.full_messages }, status: :unprocessable_entity }
       end
