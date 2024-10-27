@@ -10,11 +10,13 @@ Redmine::Plugin.register :redmine_sites_manager do
   description I18n.t('plugin_sites_manager.description', locale: :es, default: 'Plugin para gestión de sitios FLM')
   version '1.0.0'
 
+  # Agregar enlace en el menú de administración
   menu :admin_menu, :sites_manager, 
-       { controller: 'settings', action: 'plugin', id: 'redmine_sites_manager' },
-       caption: I18n.t('plugin_sites_manager.name', locale: :es, default: 'Gestor de Sitios FLM'),
+       { controller: 'sites', action: 'index' },
+       caption: I18n.t('plugin_sites_manager.sites.title', locale: :es, default: 'Gestión de Sitios'),
        html: { class: 'icon icon-package' }
 
+  # Configuración del plugin en la sección de administración de configuración de plugins
   settings default: {
     'custom_fields_mapping' => {
       'sitio' => '',
@@ -29,10 +31,4 @@ Redmine::Plugin.register :redmine_sites_manager do
       'campo_adicional_5' => ''
     }
   }, partial: 'settings/sites_manager_settings'
-end
-Redmine::MenuManager.map :admin_menu do |menu|
-  menu.push :sites_manager,
-            { controller: 'sites', action: 'index' },
-            caption: :label_sites_manager,
-            html: { class: 'icon icon-sites' }
 end
