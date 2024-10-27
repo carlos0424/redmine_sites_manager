@@ -186,31 +186,31 @@
       nic: site.nic
     }}.to_json %>;
 
-        if (typeof initializeSitesSearch === 'undefined') {
+    if (typeof initializeSitesSearch === 'undefined') {
       window.initializeSitesSearch = function() {
         const searchField = $('#sites-search-field');
         const clearButton = $('.sites-clear-btn');
         
         if (!searchField.length) return;
 
-        // Configurar el placeholder correctamente
-        searchField.attr('placeholder', '<%= j l("plugin_sites_manager.search.placeholder") %>');
-
         // Configurar autocompletado
         searchField.autocomplete({
           source: function(request, response) {
-            $.ajax({
-              url: '/sites/search',
-              method: 'GET',
-              data: { term: request.term },
-              success: function(data) {
-                response(data.map(site => ({
-                  label: `${site.s_id} - ${site.nom_sitio}`,
-                  value: `${site.s_id} - ${site.nom_sitio}`,
-                  site_data: site
-                })));
-              }
-            });
+            const term = request.term.toLowerCase();
+            const results = sitesData.filter(site => 
+              site.s_id.toLowerCase().includes(term) ||
+              site.nom_sitio.toLowerCase().includes(term) ||
+              (site.identificador && site.identificador.toLowerCase().includes(term)) ||
+              (site.municipio && site.municipio.toLowerCase().includes(term)) ||
+              (site.direccion && site.direccion.toLowerCase().includes(term)) ||
+              (site.depto && site.depto.toLowerCase().includes(term))
+            ).slice(0, 10);
+
+            response(results.map(site => ({
+              label: `${site.s_id} - ${site.nom_sitio}`,
+              value: `${site.s_id} - ${site.nom_sitio}`,
+              site_data: site
+            })));
           },
           minLength: 2,
           select: function(event, ui) {
@@ -235,24 +235,48 @@
             .appendTo(ul);
         };
 
-        // Función para actualizar campos
-        function updateFields(data) {
-          Object.entries(CUSTOM_FIELDS_MAPPING).forEach(([field, fieldId]) => {
-            const element = $(`#issue_custom_field_values_${fieldId}`);
-            if (element.length && data[field]) {
-              element.val(data[field]).trigger('change');
-            }
-          });
-        }
-
         // Manejar botón de limpiar
         clearButton.on('click', function() {
-          searchField.val('').trigger('change');
-          Object.values(CUSTOM_FIELDS_MAPPING).forEach(fieldId => {
-            $(`#issue_custom_field_values_${fieldId}`).val('').trigger('change');
-          });
+          clearFields();
+          searchField.val('').focus();
         });
+
+        searchField.on('input', function() {
+          clearButton.toggle(Boolean($(this).val()));
+        }).trigger('input');
       };
+
+      // Función para actualizar campos
+      function updateFields(data) {
+        Object.entries(CUSTOM_FIELDS_MAPPING).forEach(([field, fieldId]) => {
+          if (!data[field]) return;
+          
+          const element = $(`#issue_custom_field_values_${fieldId}`);
+          if (!element.length) return;
+
+          element
+            .val(data[field])
+            .trigger('change')
+            .removeClass('campo-variable campo-fijo');
+
+          if (field === 'fijo_variable') {
+            element.addClass(data[field].toLowerCase() === 'VARIABLE' ? 'campo-variable' : 'campo-fijo');
+          }
+        });
+      }
+
+      // Función para limpiar campos
+      function clearFields() {
+        Object.values(CUSTOM_FIELDS_MAPPING).forEach(fieldId => {
+          const element = $(`#issue_custom_field_values_${fieldId}`);
+          if (element.length) {
+            element
+              .val('')
+              .trigger('change')
+              .removeClass('campo-variable campo-fijo');
+          }
+        });
+      }
     }
 
     // Inicializar si estamos en un formulario de incidencia
@@ -260,5 +284,5 @@
       initializeSitesSearch();
     }
   });
-  </script>
+</script>
 <% end %>
