@@ -441,70 +441,17 @@ class SitesController < ApplicationController
   
   # Agrega el método export en la sección pública
   def export
-    begin
-      @sites = build_export_scope
-      send_data generate_csv(@sites),
-      filename: "sitios_#{Date.today.strftime('%Y%m%d')}.csv",
-      type: 'text/csv; charset=utf-8',
-      disposition: 'attachment'
-
-      require 'csv'
-      
-      # Generar CSV con BOM para Excel
-      csv_data = CSV.generate(col_sep: ';', encoding: 'utf-8') do |csv|
-        # Encabezados
-        csv << [
-          'S ID',
-          'Departamento',
-          'Municipio',
-          'Nombre Sitio',
-          'Dirección',
-          'Identificador',
-          'Jerarquía Definitiva',
-          'Fijo/Variable',
-          'Coordinador',
-          'Electrificadora',
-          'NIC',
-          'Campo Adicional 3',
-          'Campo Adicional 4',
-          'Campo Adicional 5'
-        ]
-
-        # Datos
-        @sites.find_each do |site|
-          csv << [
-            site.s_id,
-            site.depto,
-            site.municipio,
-            site.nom_sitio,
-            site.direccion,
-            site.identificador,
-            site.jerarquia_definitiva,
-            site.fijo_variable,
-            site.coordinador,
-            site.electrificadora,
-            site.nic,
-            site.campo_adicional_3,
-            site.campo_adicional_4,
-            site.campo_adicional_5
-          ]
-        end
-      end
-
-      # Agregar BOM para Excel
-      bom = "\xEF\xBB\xBF"
-      send_data bom + csv_data,
-                filename: "sitios_#{Date.today.strftime('%Y%m%d')}.csv",
-                type: 'text/csv; charset=utf-8',
-                disposition: 'attachment'
-    rescue StandardError => e
-      Rails.logger.error "Error exportando sitios: #{e.message}\n#{e.backtrace.join("\n")}"
-      flash[:error] = l('plugin_sites_manager.messages.export_error')
-      redirect_to sites_path
-    end
+    @sites = build_export_scope
+    send_data generate_csv(@sites),
+              filename: "sitios_#{Date.today.strftime('%Y%m%d')}.csv",
+              type: 'text/csv; charset=utf-8',
+              disposition: 'attachment'
+  rescue StandardError => e
+    Rails.logger.error "Error exportando sitios: #{e.message}\n#{e.backtrace.join("\n")}"
+    flash[:error] = l('plugin_sites_manager.messages.export_error')
+    redirect_to sites_path
   end
 
-  private
 
   def build_export_scope
     scope = FlmSite.all
@@ -526,9 +473,8 @@ class SitesController < ApplicationController
   def generate_csv(sites)
     require 'csv'
   
-    # Agregar BOM para Excel
-    bom = "\xEF\xBB\xBF"
-    
+    bom = "\xEF\xBB\xBF"  # Agregar BOM para Excel
+  
     csv_data = CSV.generate(col_sep: ';') do |csv|
       # Encabezados
       csv << [
@@ -547,7 +493,7 @@ class SitesController < ApplicationController
         'Campo Adicional 4',
         'Campo Adicional 5'
       ]
-  
+
       # Datos
       sites.find_each do |site|
         csv << [
@@ -568,10 +514,12 @@ class SitesController < ApplicationController
         ]
       end
     end
-  
+
     bom + csv_data
   end
-
+  
+  private
+  
   def normalize_s_id(value)
     return nil if value.blank?
     
