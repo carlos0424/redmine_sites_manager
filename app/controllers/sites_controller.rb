@@ -2,11 +2,13 @@ class SitesController < ApplicationController
   unloadable
 
   before_action :require_login
-  before_action :require_admin, except: [:search, :index, :show]
+  before_action :require_admin  # Cambiar esto para requerir admin en todas las acciones
   before_action :find_site, only: [:show, :edit, :update, :destroy, :toggle_status]
   before_action :load_site_collections, only: [:new, :create, :edit, :update]
   before_action :build_site_query, only: [:index]
   skip_before_action :verify_authenticity_token, only: [:search]
+  before_action :verify_sites_manager_access
+
 
   helper :sort
   include SortHelper
@@ -209,6 +211,22 @@ class SitesController < ApplicationController
     end
   
   private
+  
+  def verify_sites_manager_access
+    unless User.current.admin?
+      flash[:error] = l('plugin_sites_manager.messages.access_denied')
+      redirect_to(home_url)
+      return false
+    end
+  end
+
+  def require_admin
+    return unless require_login
+    unless User.current.admin?
+      render_403
+      return false
+    end
+  end
 
   def toggle_status
     respond_to do |format|

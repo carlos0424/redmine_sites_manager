@@ -14,10 +14,12 @@ Redmine::Plugin.register :redmine_sites_manager do
   version '1.0.0'
 
   # Agregar el plugin al menú de administración de Redmine
-  menu :admin_menu, :sites_manager, 
+  menu :admin_menu, 
+       :sites_manager,
        { controller: 'sites', action: 'index' },
        caption: I18n.t('plugin_sites_manager.name', locale: :es),
-       html: { class: 'icon icon-package' }
+       html: { class: 'icon icon-package' },
+       if: proc { User.current.admin? }
 
 
   # Definición de configuraciones predeterminadas y asignación del formulario de ajustes
