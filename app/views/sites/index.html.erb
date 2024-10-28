@@ -1,6 +1,9 @@
 <div class="contextual">
   <%= link_to l('plugin_sites_manager.sites.new'), new_site_path, class: 'icon icon-add' %>
   <%= link_to l('plugin_sites_manager.sites.import'), import_sites_path, class: 'icon icon-import' %>
+  <%= link_to l('plugin_sites_manager.sites.export'), export_sites_path(format: 'csv'), 
+  class: 'icon icon-export',
+  title: l('plugin_sites_manager.sites.export_tooltip') %>
 </div>
 
 <h2><%= l('plugin_sites_manager.sites.list') %></h2>

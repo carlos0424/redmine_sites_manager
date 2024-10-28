@@ -178,4 +178,23 @@ class FlmSite < ActiveRecord::Base
     
     self.s_id = normalized
   end
+
+  scope :for_export, -> {
+    select(
+      :s_id,
+      :depto,
+      :municipio,
+      :nom_sitio,
+      :direccion,
+      :identificador,
+      :jerarquia_definitiva,
+      :fijo_variable,
+      :coordinador,
+      :electrificadora,
+      :nic,
+      :campo_adicional_3,
+      :campo_adicional_4,
+      :campo_adicional_5
+    ).order(:s_id)
+  }
 end

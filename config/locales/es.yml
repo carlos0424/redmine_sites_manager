@@ -36,6 +36,10 @@ es:
       search_placeholder: "Buscar por ID o nombre del sitio..."
       download_template: "Descargar Plantilla"
       clear_selection: "Limpiar selección"
+      export: "Exportar Sitios"
+      export_tooltip: "Exportar todos los sitios a CSV"
+      export_success: "Sitios exportados exitosamente"
+      export_empty: "No hay sitios para exportar"
       
       # Instrucciones de importación
       instructions: "Instrucciones de Importación"
@@ -81,6 +85,10 @@ es:
       bulk_activate_success: "Sitios activados exitosamente"
       bulk_deactivate_success: "Sitios desactivados exitosamente"
       bulk_delete_success: "Sitios eliminados exitosamente"
+      export_error: "Error al exportar sitios"
+      export_processing: "Procesando exportación..."
+      export_complete: "Exportación completada"
+      export_no_data: "No hay datos para exportar"
       
       # Mensajes de error
       error_generic: "Ha ocurrido un error. Por favor, inténtelo de nuevo"
