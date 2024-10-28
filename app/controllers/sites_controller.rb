@@ -173,16 +173,24 @@ class SitesController < ApplicationController
   end
 
   def import
-    if request.post? && params[:file].present?
-      result = import_sites_from_file
-      set_import_flash_message(result)
-      redirect_to sites_path
+    if request.post?
+      if params[:file].present?
+        begin
+          result = import_sites_from_file
+          set_import_flash_message(result)
+          redirect_to sites_path
+        rescue StandardError => e
+          flash.now[:error] = "#{l('plugin_sites_manager.messages.import_error')}: #{e.message}"
+          render :import
+        end
+      else
+        flash.now[:error] = l('plugin_sites_manager.messages.no_file')
+        render :import
+      end
     else
+      # GET request - mostrar el formulario de importación
       render :import
     end
-  rescue StandardError => e
-    flash[:error] = "#{l('plugin_sites_manager.messages.import_error')}: #{e.message}"
-    redirect_to import_sites_path
   end
 
   def toggle_status
