@@ -106,24 +106,12 @@ class SitesController < ApplicationController
   end
 
   def download_template
+    require 'csv'
+  
     begin
-      require 'axlsx'
-  
-      p = Axlsx::Package.new
-      wb = p.workbook
-  
-      wb.add_worksheet(name: "Sitios") do |sheet|
-        # Estilo para encabezados
-        styles = wb.styles
-        header = styles.add_style(
-          bg_color: "335EA8",
-          fg_color: "FFFFFF",
-          b: true,
-          alignment: { horizontal: :center }
-        )
-  
-        # Agregar encabezados
-        headers = [
+      csv_data = CSV.generate(col_sep: ';') do |csv|
+        # Encabezados
+        csv << [
           'S ID (*)',
           'Departamento',
           'Municipio',
@@ -139,10 +127,9 @@ class SitesController < ApplicationController
           'Campo Adicional 4',
           'Campo Adicional 5'
         ]
-        sheet.add_row headers, style: header
   
         # Datos de ejemplo
-        example_data = [
+        csv << [
           'S001',
           'ANTIOQUIA',
           'MEDELLÍN',
@@ -158,20 +145,12 @@ class SitesController < ApplicationController
           'VALOR 4',
           'VALOR 5'
         ]
-        sheet.add_row example_data
-  
-        # Ajustar anchos de columna
-        sheet.column_widths 15, 20, 20, 30, 30, 15, 15, 15, 20, 20, 15, 20, 20, 20
       end
   
-      # Enviar el archivo
-      send_data p.to_stream.read,
-                filename: "plantilla_sitios_#{Date.today.strftime('%Y%m%d')}.xlsx",
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    rescue LoadError => e
-      Rails.logger.error "Error cargando las gemas necesarias: #{e.message}"
-      flash[:error] = l('plugin_sites_manager.messages.template_generation_error')
-      redirect_to import_sites_path
+      send_data "\xEF\xBB\xBF" + csv_data, # Agregar BOM para mejor compatibilidad con Excel
+                filename: "plantilla_sitios_#{Date.today.strftime('%Y%m%d')}.csv",
+                type: 'text/csv; charset=utf-8',
+                disposition: 'attachment'
     rescue StandardError => e
       Rails.logger.error "Error generando plantilla: #{e.message}"
       flash[:error] = l('plugin_sites_manager.messages.template_generation_error')
@@ -341,15 +320,64 @@ class SitesController < ApplicationController
   def import_sites_from_file
     raise l('plugin_sites_manager.messages.no_file') unless params[:file].present?
     raise l('plugin_sites_manager.messages.invalid_file_type') unless valid_import_file?(params[:file])
-
-    FlmSite.import_from_excel(params[:file].path)
+  
+    case File.extname(params[:file].original_filename).downcase
+    when '.csv'
+      import_from_csv(params[:file])
+    when '.xls', '.xlsx'
+      FlmSite.import_from_excel(params[:file].path)
+    end
+  end
+  
+  def import_from_csv(file)
+    require 'csv'
+    
+    result = { imported: 0, updated: 0, failed: 0, errors: [] }
+    
+    begin
+      CSV.foreach(file.path, headers: true, col_sep: ';', encoding: 'bom|utf-8') do |row|
+        # Convertir la fila a un hash con las claves normalizadas
+        attributes = row.to_hash.transform_keys(&:downcase)
+        
+        # Buscar o crear el sitio
+        site = FlmSite.find_or_initialize_by(s_id: attributes['s id'])
+        
+        # Mapear los campos
+        site_attributes = {
+          s_id: attributes['s id'],
+          depto: attributes['departamento'],
+          municipio: attributes['municipio'],
+          nom_sitio: attributes['nombre sitio'],
+          direccion: attributes['dirección'],
+          identificador: attributes['identificador'],
+          jerarquia_definitiva: attributes['jerarquía definitiva'],
+          fijo_variable: attributes['fijo/variable'],
+          coordinador: attributes['coordinador'],
+          electrificadora: attributes['electrificadora'],
+          nic: attributes['nic'],
+          campo_adicional_3: attributes['campo adicional 3'],
+          campo_adicional_4: attributes['campo adicional 4'],
+          campo_adicional_5: attributes['campo adicional 5']
+        }
+  
+        if site.new_record?
+          result[:imported] += 1 if site.update(site_attributes)
+        else
+          result[:updated] += 1 if site.update(site_attributes)
+        end
+      rescue StandardError => e
+        result[:failed] += 1
+        result[:errors] << "Fila #{$.}: #{e.message}"
+      end
+    end
+    
+    result
   end
 
   def valid_import_file?(file)
     extension = File.extname(file.original_filename).downcase
-    %w[.xls .xlsx].include?(extension)
+    %w[.csv .xls .xlsx].include?(extension)
   end
-
   def set_import_flash_message(result)
     if result[:error]
       flash[:error] = "#{l('plugin_sites_manager.messages.import_error')}: #{result[:error]}"

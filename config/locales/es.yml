@@ -86,6 +86,10 @@ es:
       import_error: "Error al importar sitios"
       import_partial: "%{imported} sitios importados, %{updated} actualizados, %{failed} fallidos"
       template_generation_error: "Error al generar la plantilla. Por favor, inténtelo de nuevo."
+      invalid_file_type: "Tipo de archivo no válido. Use archivos CSV, XLS o XLSX"
+      import_success: "Importación exitosa"
+      import_error: "Error en la importación"
+      no_file: "Por favor seleccione un archivo"
 
       
     buttons:
