@@ -109,12 +109,13 @@ class SitesController < ApplicationController
     begin
       require 'axlsx'
   
-      package = Axlsx::Package.new
-      workbook = package.workbook
+      p = Axlsx::Package.new
+      wb = p.workbook
   
-      workbook.add_worksheet(name: "Sitios") do |sheet|
+      wb.add_worksheet(name: "Sitios") do |sheet|
         # Estilo para encabezados
-        header_style = workbook.styles.add_style(
+        styles = wb.styles
+        header = styles.add_style(
           bg_color: "335EA8",
           fg_color: "FFFFFF",
           b: true,
@@ -138,7 +139,7 @@ class SitesController < ApplicationController
           'Campo Adicional 4',
           'Campo Adicional 5'
         ]
-        sheet.add_row headers, style: header_style
+        sheet.add_row headers, style: header
   
         # Datos de ejemplo
         example_data = [
@@ -163,10 +164,14 @@ class SitesController < ApplicationController
         sheet.column_widths 15, 20, 20, 30, 30, 15, 15, 15, 20, 20, 15, 20, 20, 20
       end
   
-      # Generar y enviar el archivo
-      send_data package.to_stream.read,
+      # Enviar el archivo
+      send_data p.to_stream.read,
                 filename: "plantilla_sitios_#{Date.today.strftime('%Y%m%d')}.xlsx",
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    rescue LoadError => e
+      Rails.logger.error "Error cargando las gemas necesarias: #{e.message}"
+      flash[:error] = l('plugin_sites_manager.messages.template_generation_error')
+      redirect_to import_sites_path
     rescue StandardError => e
       Rails.logger.error "Error generando plantilla: #{e.message}"
       flash[:error] = l('plugin_sites_manager.messages.template_generation_error')
