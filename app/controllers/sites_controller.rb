@@ -441,30 +441,65 @@ class SitesController < ApplicationController
   private
   
   def export
-    @sites = build_export_scope
-    
-    if @sites.count > 1000
-      # Para exportaciones grandes, usar procesamiento en segundo plano
-      job_id = SitesExportJob.perform_later(User.current.id, params[:search])
-      flash[:notice] = l('plugin_sites_manager.messages.export_processing')
-      redirect_to sites_path
-    else
-      # Para exportaciones pequeñas, procesar inmediatamente
-      respond_to do |format|
-        format.csv {
-          send_data generate_csv(@sites),
-                    filename: "sitios_#{Date.today.strftime('%Y%m%d')}.csv",
-                    type: 'text/csv; charset=utf-8; header=present',
-                    disposition: 'attachment'
-        }
+    begin
+      @sites = FlmSite.all # o build_export_scope si tienes ese método
+
+      require 'csv'
+      
+      # Generar CSV con BOM para Excel
+      csv_data = CSV.generate(col_sep: ';', encoding: 'utf-8') do |csv|
+        # Encabezados
+        csv << [
+          'S ID',
+          'Departamento',
+          'Municipio',
+          'Nombre Sitio',
+          'Dirección',
+          'Identificador',
+          'Jerarquía Definitiva',
+          'Fijo/Variable',
+          'Coordinador',
+          'Electrificadora',
+          'NIC',
+          'Campo Adicional 3',
+          'Campo Adicional 4',
+          'Campo Adicional 5'
+        ]
+
+        # Datos
+        @sites.each do |site|
+          csv << [
+            site.s_id,
+            site.depto,
+            site.municipio,
+            site.nom_sitio,
+            site.direccion,
+            site.identificador,
+            site.jerarquia_definitiva,
+            site.fijo_variable,
+            site.coordinador,
+            site.electrificadora,
+            site.nic,
+            site.campo_adicional_3,
+            site.campo_adicional_4,
+            site.campo_adicional_5
+          ]
+        end
       end
+
+      # Agregar BOM para Excel
+      bom = "\xEF\xBB\xBF"
+      send_data bom + csv_data,
+                filename: "sitios_#{Date.today.strftime('%Y%m%d')}.csv",
+                type: 'text/csv; charset=utf-8',
+                disposition: 'attachment'
+    rescue StandardError => e
+      Rails.logger.error "Error exportando sitios: #{e.message}\n#{e.backtrace.join("\n")}"
+      flash[:error] = l('plugin_sites_manager.messages.export_error')
+      redirect_to sites_path
     end
-  rescue StandardError => e
-    Rails.logger.error "Error exportando sitios: #{e.message}"
-    flash[:error] = l('plugin_sites_manager.messages.export_error')
-    redirect_to sites_path
   end
-  
+
   private
   
   def build_export_scope
