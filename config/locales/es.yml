@@ -69,7 +69,6 @@ es:
       campo_adicional_5: "Campo Adicional 5"
     
     messages:
-      import_success: "Sitios importados exitosamente"
       import_error: "Error importando sitios"
       status_updated: "Estado del sitio actualizado"
       status_update_failed: "Error actualizando estado del sitio"
@@ -80,20 +79,12 @@ es:
       no_selection: "Por favor seleccione al menos un sitio"
       delete_error: "Error al eliminar el sitio"
       no_file: "Por favor seleccione un archivo"
-      invalid_file_type: "Tipo de archivo no válido. Use .xlsx o .xls"
       file_too_large: "El archivo es demasiado grande. Máximo 5MB"
       import_success: "Sitios importados exitosamente"
-      import_error: "Error al importar sitios"
-      import_partial: "%{imported} sitios importados, %{updated} actualizados, %{failed} fallidos"
       template_generation_error: "Error al generar la plantilla. Por favor, inténtelo de nuevo."
       invalid_file_type: "Tipo de archivo no válido. Use archivos CSV, XLS o XLSX"
-      import_success: "Importación exitosa"
-      import_error: "Error en la importación"
-      no_file: "Por favor seleccione un archivo"
-      invalid_file_type: "Tipo de archivo no válido. Use archivos CSV"
-
-
-      
+      import_started: "Iniciando importación..."
+      import_processing: "Procesando archivo..."      
     buttons:
       new_site: "Nuevo Sitio"
       import_sites: "Importar Sitios"

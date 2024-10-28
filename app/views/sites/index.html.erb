@@ -80,3 +80,20 @@
     }
   }
 </style>
+<%# Agregar al final de la vista index.html.erb si hay errores en la sesión %>
+<% if session[:import_errors].present? %>
+  <div id="import-errors" class="modal hide-print">
+    <h3><%= l('plugin_sites_manager.sites.import_errors') %></h3>
+    <div class="errors-list">
+      <% session[:import_errors].each do |error| %>
+        <p><%= error %></p>
+      <% end %>
+    </div>
+    <div class="buttons">
+      <%= link_to l(:button_close), '#', 
+                  onclick: '$("#import-errors").hide(); return false;',
+                  class: 'button' %>
+    </div>
+  </div>
+  <% session.delete(:import_errors) %>
+<% end %>
