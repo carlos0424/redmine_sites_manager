@@ -106,55 +106,72 @@ class SitesController < ApplicationController
   end
 
   def download_template
-    require 'axlsx'
+    begin
+      require 'axlsx'
   
-    package = Axlsx::Package.new
-    workbook = package.workbook
+      package = Axlsx::Package.new
+      workbook = package.workbook
   
-    workbook.add_worksheet(name: "Sitios") do |sheet|
-      # Encabezados
-      sheet.add_row [
-        'S ID',
-        'Departamento',
-        'Municipio',
-        'Nombre Sitio',
-        'Dirección',
-        'Identificador',
-        'Jerarquía Definitiva',
-        'Fijo/Variable',
-        'Coordinador',
-        'Electrificadora',
-        'NIC',
-        'Campo Adicional 3',
-        'Campo Adicional 4',
-        'Campo Adicional 5'
-      ]
+      workbook.add_worksheet(name: "Sitios") do |sheet|
+        # Estilo para encabezados
+        header_style = workbook.styles.add_style(
+          bg_color: "335EA8",
+          fg_color: "FFFFFF",
+          b: true,
+          alignment: { horizontal: :center }
+        )
   
-      # Ejemplo de datos
-      sheet.add_row [
-        'S001',
-        'ANTIOQUIA',
-        'MEDELLÍN',
-        'SITIO EJEMPLO',
-        'CALLE 123',
-        'ID001',
-        'B_1',
-        'FIJO',
-        'JUAN PEREZ',
-        'EPM',
-        '12345',
-        '',
-        '',
-        ''
-      ]
+        # Agregar encabezados
+        headers = [
+          'S ID (*)',
+          'Departamento',
+          'Municipio',
+          'Nombre Sitio (*)',
+          'Dirección',
+          'Identificador',
+          'Jerarquía Definitiva',
+          'Fijo/Variable',
+          'Coordinador',
+          'Electrificadora',
+          'NIC',
+          'Campo Adicional 3',
+          'Campo Adicional 4',
+          'Campo Adicional 5'
+        ]
+        sheet.add_row headers, style: header_style
   
-      # Dar formato a la hoja
-      sheet.column_widths 15, 20, 20, 30, 30, 15, 15, 15, 20, 20, 15, 20, 20, 20
+        # Datos de ejemplo
+        example_data = [
+          'S001',
+          'ANTIOQUIA',
+          'MEDELLÍN',
+          'SITIO EJEMPLO',
+          'CALLE 123',
+          'ID001',
+          'B_1',
+          'FIJO',
+          'JUAN PEREZ',
+          'EPM',
+          '12345',
+          'VALOR 3',
+          'VALOR 4',
+          'VALOR 5'
+        ]
+        sheet.add_row example_data
+  
+        # Ajustar anchos de columna
+        sheet.column_widths 15, 20, 20, 30, 30, 15, 15, 15, 20, 20, 15, 20, 20, 20
+      end
+  
+      # Generar y enviar el archivo
+      send_data package.to_stream.read,
+                filename: "plantilla_sitios_#{Date.today.strftime('%Y%m%d')}.xlsx",
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    rescue StandardError => e
+      Rails.logger.error "Error generando plantilla: #{e.message}"
+      flash[:error] = l('plugin_sites_manager.messages.template_generation_error')
+      redirect_to import_sites_path
     end
-  
-    send_data package.to_stream.read,
-              filename: "plantilla_sitios_#{Date.today}.xlsx",
-              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   end
 
   def search

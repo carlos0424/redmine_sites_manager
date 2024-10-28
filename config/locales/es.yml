@@ -85,6 +85,8 @@ es:
       import_success: "Sitios importados exitosamente"
       import_error: "Error al importar sitios"
       import_partial: "%{imported} sitios importados, %{updated} actualizados, %{failed} fallidos"
+      template_generation_error: "Error al generar la plantilla. Por favor, inténtelo de nuevo."
+
       
     buttons:
       new_site: "Nuevo Sitio"
