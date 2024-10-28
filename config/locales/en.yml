@@ -17,6 +17,8 @@ es:
       location_fields: "Campos de Ubicación"
       characteristic_fields: "Características del Sitio"
       additional_fields: "Campos Adicionales"
+      
+    search:
       placeholder: "Buscar por ID, nombre, municipio o dirección..."
       no_results: "No se encontraron sitios"
       searching: "Buscando..."
@@ -29,16 +31,31 @@ es:
       list: "Lista de Sitios"
       import: "Importar Sitios"
       details: "Detalles del Sitio"
-      search_label: "Seleccione Sitio"
-      search: "Ingrese el Sitio S ID"
+      search_label: "Buscar sitios..."
+      search: "Buscar sitios..."
       search_placeholder: "Buscar por ID o nombre del sitio..."
       download_template: "Descargar Plantilla"
-      import_instructions: "Instrucciones de Importación"
-      label_sites_manager: "Gestión de Sitios"
       clear_selection: "Limpiar selección"
-      search_results: "Resultados de búsqueda"
-      no_results: "No se encontraron resultados"
-      searching: "Buscando..."
+      
+      # Instrucciones de importación
+      instructions: "Instrucciones de Importación"
+      instruction_template: "1. Descargue la plantilla usando el botón 'Descargar Plantilla'"
+      instruction_fill: "2. Complete la plantilla con los datos de los sitios"
+      instruction_save: "3. Guarde el archivo en formato CSV (delimitado por punto y coma)"
+      instruction_upload: "4. Seleccione el archivo y haga clic en 'Importar Sitios'"
+      required_fields: "Campos Obligatorios"
+      select_file: "Seleccionar Archivo"
+      file_format: "Formato soportado: CSV (delimitado por punto y coma)"
+      import_button: "Importar Sitios"
+      importing: "Importando sitios..."
+      import_errors: "Errores de Importación"
+      
+      # Validaciones de importación
+      validation:
+        required_field: "El campo '%{field}' es obligatorio"
+        invalid_format: "Formato inválido en el campo '%{field}'"
+        duplicate_id: "El S ID '%{value}' está duplicado"
+        row_error: "Error en fila %{row}: %{message}"
 
     fields:
       s_id: "S ID"
@@ -57,28 +74,49 @@ es:
       campo_adicional_5: "Campo Adicional 5"
     
     messages:
-      import_success: "Sitios importados exitosamente"
-      import_error: "Error importando sitios"
-      status_updated: "Estado del sitio actualizado"
-      status_update_failed: "Error actualizando estado del sitio"
-      import_partial: "%{imported} sitios importados, %{updated} actualizados, %{failed} fallidos"
+      # Mensajes de éxito
+      import_success: "%{imported} sitios importados y %{updated} actualizados exitosamente"
+      import_partial: "Importación parcial: %{imported} importados, %{updated} actualizados, %{failed} fallidos"
+      status_updated: "Estado del sitio actualizado correctamente"
       bulk_activate_success: "Sitios activados exitosamente"
       bulk_deactivate_success: "Sitios desactivados exitosamente"
       bulk_delete_success: "Sitios eliminados exitosamente"
+      
+      # Mensajes de error
+      error_generic: "Ha ocurrido un error. Por favor, inténtelo de nuevo"
+      import_error: "Error durante la importación: %{error}"
+      status_update_failed: "Error actualizando estado del sitio"
       no_selection: "Por favor seleccione al menos un sitio"
       delete_error: "Error al eliminar el sitio"
+      no_file: "Por favor seleccione un archivo"
+      file_too_large: "El archivo es demasiado grande. Tamaño máximo: 5MB"
+      template_generation_error: "Error al generar la plantilla. Por favor, inténtelo de nuevo"
+      invalid_file_type: "Tipo de archivo no válido. Use archivos CSV"
       
+      # Mensajes de proceso
+      import_started: "Iniciando importación..."
+      import_processing: "Procesando archivo..."
+      importing_file: "Importando archivo %{filename}..."
+      processing_row: "Procesando fila %{row}..."
+      
+      # Validaciones
+      field_required: "El campo %{field} es requerido"
+      invalid_format: "Formato inválido para %{field}"
+      s_id_format: "El S ID debe comenzar con 'S' seguido de números (ejemplo: S001)"
+      duplicate_s_id: "El S ID '%{value}' ya existe en el sistema"
+
     buttons:
       new_site: "Nuevo Sitio"
       import_sites: "Importar Sitios"
       download_template: "Descargar Plantilla"
-      upload_excel: "Subir Excel"
       save: "Guardar"
       cancel: "Cancelar"
       apply: "Aplicar"
       activate: "Activar"
       deactivate: "Desactivar"
       delete: "Eliminar"
+      close: "Cerrar"
+      back: "Volver"
 
     status:
       active: "Activo"
@@ -92,6 +130,19 @@ es:
       site_related: "Campo relacionado con sitios"
       required: "Campo requerido"
 
-  errors:
+    errors:
       coordinador_not_found: "Coordinador no encontrado"
       invalid_coordinador: "Coordinador inválido"
+      import_failed: "La importación ha fallado"
+      row_error: "Error en fila %{row}"
+      missing_required: "Faltan campos requeridos"
+      invalid_s_id: "S ID inválido"
+      duplicate_entry: "Entrada duplicada"
+      invalid_data: "Datos inválidos"
+      processing_error: "Error procesando el archivo"
+      unknown_error: "Error desconocido"
+
+    notices:
+      import_complete: "Importación completada"
+      import_partial: "Importación completada con advertencias"
+      no_changes: "No se realizaron cambios"

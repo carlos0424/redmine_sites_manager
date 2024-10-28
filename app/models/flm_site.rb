@@ -1,15 +1,11 @@
 class FlmSite < ActiveRecord::Base
   include Redmine::Pagination
   
-  # Constantes
-  #FIJO_VARIABLE_OPTIONS = ['Fijo', 'Variable'].freeze
-  
+
   # Validaciones
   validates :s_id, presence: true, uniqueness: true, format: { with: /\AS\d+\z/, message: "debe comenzar con 'S' seguido de números" }
   validates :nom_sitio, presence: true
-  #validates :fijo_variable, inclusion: { in: FIJO_VARIABLE_OPTIONS }, allow_nil: true
-  #validates :jerarquia_definitiva, format: { with: /\AB_[1-9]\z/, message: "debe tener el formato B_N donde N es un número" }, allow_nil: true
-  
+
   # Atributos accesibles
   attr_accessible :s_id, 
                   :depto, 
@@ -167,8 +163,19 @@ class FlmSite < ActiveRecord::Base
   end
   
   def normalize_s_id
-    return unless s_id
-    self.s_id = s_id.to_s.strip.upcase
-    self.s_id = "S#{s_id}" if s_id =~ /^\d+$/
+    return if s_id.blank?
+    
+    # Limpiar el valor
+    normalized = s_id.to_s.strip.upcase
+    
+    # Si es solo números, agregar la S
+    if normalized =~ /^\d+$/
+      normalized = "S#{normalized}"
+    # Si no empieza con S y tiene números, agregar la S
+    elsif normalized !~ /^S/ && normalized =~ /\d+/
+      normalized = "S#{normalized.gsub(/[^0-9]/, '')}"
+    end
+    
+    self.s_id = normalized
   end
 end

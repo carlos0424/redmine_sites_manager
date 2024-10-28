@@ -376,10 +376,11 @@ class SitesController < ApplicationController
     return if row.to_hash.values.all?(&:nil?) # Saltar filas vacías
     
     attributes = row.to_hash.transform_keys { |k| k.to_s.downcase.strip.gsub(/[(*)]/, '').strip }
+    current_row = result[:imported] + result[:updated] + result[:failed] + 1
     
-    # Mapeo de campos con nombres alternativos
+    # Mapeo de campos
     site_attrs = {
-      s_id: find_value(attributes, ['s id', 's_id', 'sid']),
+      s_id: normalize_s_id(find_value(attributes, ['s id', 's_id', 'sid'])),
       depto: find_value(attributes, ['departamento', 'depto']),
       municipio: find_value(attributes, ['municipio']),
       nom_sitio: find_value(attributes, ['nombre sitio', 'nom_sitio', 'nombre_sitio']),
@@ -395,47 +396,62 @@ class SitesController < ApplicationController
       campo_adicional_5: find_value(attributes, ['campo adicional 5', 'campo_adicional_5'])
     }
   
-    # Limpiar valores
-    site_attrs.transform_values! { |v| v.to_s.strip.presence }
+    # Validaciones previas
+    validations = []
+    validations << "S ID" if site_attrs[:s_id].blank?
+    validations << "Nombre Sitio" if site_attrs[:nom_sitio].blank?
     
-    Rails.logger.debug "Procesando fila con atributos: #{site_attrs.inspect}" # Agregar logging
-    
-    # Validar campos requeridos
-    if site_attrs[:s_id].blank? || site_attrs[:nom_sitio].blank?
+    if validations.any?
       result[:failed] += 1
-      result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed] + 1}: Falta S ID o Nombre Sitio (S ID: '#{site_attrs[:s_id]}', Nombre: '#{site_attrs[:nom_sitio]}')"
+      result[:errors] << "Fila #{current_row}: Campos requeridos faltantes: #{validations.join(', ')}"
       return
     end
   
-    # Buscar o crear sitio
-    site = FlmSite.find_or_initialize_by(s_id: site_attrs[:s_id])
-    
+    # Validar formato de S ID
+    unless site_attrs[:s_id] =~ /\AS\d+\z/
+      result[:failed] += 1
+      result[:errors] << "Fila #{current_row}: Formato de S ID inválido (debe ser 'S' seguido de números)"
+      return
+    end
+  
     begin
+      site = FlmSite.find_or_initialize_by(s_id: site_attrs[:s_id])
+      
       if site.new_record?
         if site.update(site_attrs)
           result[:imported] += 1
-          Rails.logger.info "Sitio importado: #{site_attrs[:s_id]}"
         else
           result[:failed] += 1
-          result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: #{site.errors.full_messages.join(', ')}"
+          result[:errors] << "Fila #{current_row}: #{site.errors.full_messages.join(', ')}"
         end
       else
         if site.update(site_attrs)
           result[:updated] += 1
-          Rails.logger.info "Sitio actualizado: #{site_attrs[:s_id]}"
         else
           result[:failed] += 1
-          result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: #{site.errors.full_messages.join(', ')}"
+          result[:errors] << "Fila #{current_row}: #{site.errors.full_messages.join(', ')}"
         end
       end
     rescue StandardError => e
       result[:failed] += 1
-      result[:errors] << "Error en fila #{result[:imported] + result[:updated] + result[:failed]}: #{e.message}"
-      Rails.logger.error "Error procesando fila: #{e.message}\n#{e.backtrace.join("\n")}"
+      result[:errors] << "Fila #{current_row}: Error - #{e.message}"
     end
   end
   
   private
+  
+  def normalize_s_id(value)
+    return nil if value.blank?
+    
+    normalized = value.to_s.strip.upcase
+    if normalized =~ /^\d+$/
+      "S#{normalized}"
+    elsif normalized !~ /^S/ && normalized =~ /\d+/
+      "S#{normalized.gsub(/[^0-9]/, '')}"
+    else
+      normalized
+    end
+  end
   
   def find_value(attributes, possible_keys)
     possible_keys.each do |key|
@@ -503,24 +519,30 @@ class SitesController < ApplicationController
   end
 
   def set_import_flash_message(result)
-    message = []
-    
-    if result[:imported] > 0 || result[:updated] > 0
-      message << l('plugin_sites_manager.messages.import_success',
-                  imported: result[:imported],
-                  updated: result[:updated])
-    end
-    
-    if result[:failed] > 0
-      message << l('plugin_sites_manager.messages.import_partial',
-                  failed: result[:failed])
-    end
+    result[:imported] ||= 0
+    result[:updated] ||= 0
+    result[:failed] ||= 0
     
     if result[:errors].any?
-      flash[:error] = message.join('. ')
-      flash[:warning] = result[:errors].join("<br/>").html_safe
+      message = l('plugin_sites_manager.messages.import_partial',
+                  imported: result[:imported],
+                  updated: result[:updated],
+                  failed: result[:failed])
+      
+      # Organizar errores por tipo
+      error_messages = result[:errors].group_by { |error| error[/^.*?:/] || 'Otros:' }
+      formatted_errors = error_messages.map do |type, errors|
+        "<strong>#{type}</strong><ul>" +
+        errors.map { |e| "<li>#{e.sub(type, '')}</li>" }.join + 
+        "</ul>"
+      end.join
+  
+      flash[:error] = message
+      flash[:warning] = formatted_errors.html_safe
     else
-      flash[:notice] = message.join('. ')
+      flash[:notice] = l('plugin_sites_manager.messages.import_success',
+                        imported: result[:imported],
+                        updated: result[:updated])
     end
   end
 
