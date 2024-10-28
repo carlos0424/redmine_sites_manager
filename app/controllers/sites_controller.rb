@@ -109,7 +109,6 @@ class SitesController < ApplicationController
     require 'csv'
   
     begin
-      # Crear el contenido del CSV con BOM para Excel
       csv_data = CSV.generate(col_sep: ';', encoding: 'utf-8') do |csv|
         # Encabezados
         csv << [
@@ -129,7 +128,7 @@ class SitesController < ApplicationController
           'Campo Adicional 5'
         ]
   
-        # Fila de ejemplo
+        # Datos de ejemplo
         csv << [
           'S001',
           'ANTIOQUIA',
@@ -148,13 +147,11 @@ class SitesController < ApplicationController
         ]
       end
   
-      # Agregar BOM para Excel
       bom = "\xEF\xBB\xBF"
-      send_data bom + csv_data,
+      send_data bom + csv_data.force_encoding('UTF-8'),
                 filename: "plantilla_sitios_#{Date.today.strftime('%Y%m%d')}.csv",
                 type: 'text/csv; charset=utf-8',
                 disposition: 'attachment'
-  
     rescue StandardError => e
       Rails.logger.error "Error generando plantilla: #{e.message}"
       flash[:error] = l('plugin_sites_manager.messages.template_generation_error')
@@ -334,12 +331,15 @@ class SitesController < ApplicationController
     result = { imported: 0, updated: 0, failed: 0, errors: [] }
     
     begin
-      encoding = detect_file_encoding(file.path)
-      CSV.foreach(file.path, headers: true, col_sep: detect_separator(file.path), encoding: encoding) do |row|
+      content = File.read(file.path).force_encoding('UTF-8')
+      content = content.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '')
+      content = content.gsub("\xEF\xBB\xBF", '') # Eliminar BOM si existe
+      
+      CSV.parse(content, headers: true, col_sep: detect_separator(content)) do |row|
         process_row(row, result)
       end
     rescue StandardError => e
-      Rails.logger.error "Import error: #{e.message}"
+      Rails.logger.error "Import error: #{e.message}\n#{e.backtrace.join("\n")}"
       result[:errors] << e.message
     end
     
@@ -358,38 +358,68 @@ class SitesController < ApplicationController
     ','
   end
   
-  def process_row(row, result)
-    attributes = row.to_hash.transform_keys { |k| k.to_s.downcase.strip }
-    
-    site = FlmSite.find_or_initialize_by(s_id: attributes['s id']&.strip)
-    
-    site_attributes = {
-      s_id: attributes['s id']&.strip,
-      depto: attributes['departamento']&.strip,
-      municipio: attributes['municipio']&.strip,
-      nom_sitio: attributes['nombre sitio']&.strip,
-      direccion: attributes['dirección']&.strip || attributes['direccion']&.strip,
-      identificador: attributes['identificador']&.strip,
-      jerarquia_definitiva: attributes['jerarquía definitiva']&.strip || attributes['jerarquia definitiva']&.strip,
-      fijo_variable: attributes['fijo/variable']&.strip,
-      coordinador: attributes['coordinador']&.strip,
-      electrificadora: attributes['electrificadora']&.strip,
-      nic: attributes['nic']&.strip,
-      campo_adicional_3: attributes['campo adicional 3']&.strip,
-      campo_adicional_4: attributes['campo adicional 4']&.strip,
-      campo_adicional_5: attributes['campo adicional 5']&.strip
-    }
-  
-    if site.new_record?
-      result[:imported] += 1 if site.update(site_attributes)
-    else
-      result[:updated] += 1 if site.update(site_attributes)
-    end
-  rescue StandardError => e
-    result[:failed] += 1
-    result[:errors] << "Error en fila #{$.}: #{e.message}"
+  def detect_separator(content)
+    first_line = content.lines.first.to_s
+    return ';' if first_line.include?(';')
+    ','
   end
+
+  def process_row(row, result)
+  return if row.to_hash.values.all?(&:nil?) # Saltar filas vacías
   
+  attributes = row.to_hash.transform_keys { |k| k.to_s.downcase.strip }
+  
+  # Mapeo de campos
+  site_attrs = {
+    s_id: attributes['s id'] || attributes['s_id'] || attributes['sid'],
+    depto: attributes['departamento'] || attributes['depto'],
+    municipio: attributes['municipio'],
+    nom_sitio: attributes['nombre sitio'] || attributes['nom_sitio'] || attributes['nombre_sitio'],
+    direccion: attributes['dirección'] || attributes['direccion'],
+    identificador: attributes['identificador'],
+    jerarquia_definitiva: attributes['jerarquía definitiva'] || attributes['jerarquia_definitiva'],
+    fijo_variable: attributes['fijo/variable'] || attributes['fijo_variable'],
+    coordinador: attributes['coordinador'],
+    electrificadora: attributes['electrificadora'],
+    nic: attributes['nic'],
+    campo_adicional_3: attributes['campo adicional 3'] || attributes['campo_adicional_3'],
+    campo_adicional_4: attributes['campo adicional 4'] || attributes['campo_adicional_4'],
+    campo_adicional_5: attributes['campo adicional 5'] || attributes['campo_adicional_5']
+  }
+
+  # Limpiar y validar valores
+  site_attrs.transform_values! { |v| v.to_s.strip.presence }
+  
+  # Validar campos requeridos
+  if site_attrs[:s_id].blank? || site_attrs[:nom_sitio].blank?
+    result[:failed] += 1
+    result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: S ID y Nombre Sitio son obligatorios"
+    return
+  end
+
+  # Buscar o crear sitio
+  site = FlmSite.find_or_initialize_by(s_id: site_attrs[:s_id])
+  
+  if site.new_record?
+    if site.update(site_attrs)
+      result[:imported] += 1
+    else
+      result[:failed] += 1
+      result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: #{site.errors.full_messages.join(', ')}"
+    end
+  else
+    if site.update(site_attrs)
+      result[:updated] += 1
+    else
+      result[:failed] += 1
+      result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: #{site.errors.full_messages.join(', ')}"
+    end
+  end
+rescue StandardError => e
+  result[:failed] += 1
+  result[:errors] << "Error en fila #{result[:imported] + result[:updated] + result[:failed]}: #{e.message}"
+end
+
   def import_from_csv(file)
     require 'csv'
     
@@ -441,17 +471,15 @@ class SitesController < ApplicationController
   end
 
   def set_import_flash_message(result)
-    if result[:error]
-      flash[:error] = "#{l('plugin_sites_manager.messages.import_error')}: #{result[:error]}"
-    elsif result[:failed].to_i > 0
-      flash[:warning] = l('plugin_sites_manager.messages.import_partial', 
-                         imported: result[:imported], 
-                         updated: result[:updated], 
-                         failed: result[:failed])
-      session[:import_errors] = result[:errors]
+    if result[:errors].any?
+      flash[:error] = l('plugin_sites_manager.messages.import_partial',
+                       imported: result[:imported],
+                       updated: result[:updated],
+                       failed: result[:failed])
+      flash[:warning] = result[:errors].join("<br/>").html_safe
     else
-      flash[:notice] = l('plugin_sites_manager.messages.import_success', 
-                        imported: result[:imported], 
+      flash[:notice] = l('plugin_sites_manager.messages.import_success',
+                        imported: result[:imported],
                         updated: result[:updated])
     end
   end
