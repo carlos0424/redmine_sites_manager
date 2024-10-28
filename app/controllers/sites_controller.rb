@@ -192,6 +192,21 @@ class SitesController < ApplicationController
       end
     end
   end
+
+    # Agrega el método export en la sección pública
+    def export
+      begin
+        @sites = build_export_scope
+        send_data generate_csv(@sites),
+                  filename: "sitios_#{Date.today.strftime('%Y%m%d')}.csv",
+                  type: 'text/csv; charset=utf-8',
+                  disposition: 'attachment'
+      rescue StandardError => e
+        Rails.logger.error "Error exportando sitios: #{e.message}\n#{e.backtrace.join("\n")}"
+        flash[:error] = l('plugin_sites_manager.messages.export_error')
+        redirect_to sites_path
+      end
+    end
   
   private
 
@@ -439,18 +454,7 @@ class SitesController < ApplicationController
     end
   end
   
-  # Agrega el método export en la sección pública
-  def export
-    @sites = build_export_scope
-    send_data generate_csv(@sites),
-              filename: "sitios_#{Date.today.strftime('%Y%m%d')}.csv",
-              type: 'text/csv; charset=utf-8',
-              disposition: 'attachment'
-  rescue StandardError => e
-    Rails.logger.error "Error exportando sitios: #{e.message}\n#{e.backtrace.join("\n")}"
-    flash[:error] = l('plugin_sites_manager.messages.export_error')
-    redirect_to sites_path
-  end
+
 
 
   def build_export_scope
@@ -518,7 +522,7 @@ class SitesController < ApplicationController
     bom + csv_data
   end
   
-  private
+
   
   def normalize_s_id(value)
     return nil if value.blank?
