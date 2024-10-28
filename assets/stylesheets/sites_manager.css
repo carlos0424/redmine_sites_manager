@@ -50,3 +50,42 @@
   color: #666;
   font-size: 0.9em;
 }
+.site-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.site-search-wrapper label {
+  display: block;
+  font-weight: bold;
+  font-size: 12px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+#sites-search-field {
+  width: 100%;
+  padding: 8px 32px 8px 8px; /* Espacio para el ícono de limpieza */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.sites-clear-btn {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s;
+}
+
+.sites-clear-btn:hover {
+  color: #555;
+}
+
+.sites-clear-btn svg {
+  width: 16px;
+  height: 16px;
+}

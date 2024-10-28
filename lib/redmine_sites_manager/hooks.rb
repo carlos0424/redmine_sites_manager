@@ -9,29 +9,34 @@ module RedmineSitesManager
 
     # Hook para agregar el campo de búsqueda de sitios en el formulario de incidencias
     def view_issues_form_details_top(context={})
-      return '' unless show_site_search?(context[:issue])
-      
-      html = <<-HTML
-        <div class="sites-search-container">
-          <p>
-            <label>#{l('plugin_sites_manager.sites.search_label')}</label>
-            <input type="text" 
-                   id="sites-search-field" 
-                   class="sites-autocomplete" 
-                   placeholder="#{l('plugin_sites_manager.search.placeholder')}"
-                   autocomplete="off" />
-            <span class="sites-clear-btn" 
-                  title="#{l('plugin_sites_manager.sites.clear_selection')}">×</span>
-          </p>
-          <div class="sites-preview" style="display: none;">
-            <div class="selected-site-info"></div>
-          </div>
-          #{render_initialization_script}
+    return '' unless show_site_search?(context[:issue])
+    
+    html = <<-HTML
+      <div class="sites-search-container">
+        <p class="site-search-wrapper">
+          <label>#{l('plugin_sites_manager.sites.search_label')}</label>
+          <input type="text" 
+                 id="sites-search-field" 
+                 class="sites-autocomplete ui-autocomplete-input" 
+                 placeholder="#{l('plugin_sites_manager.search.placeholder')}" 
+                 autocomplete="off" />
+          <span class="sites-clear-btn" 
+                title="#{l('plugin_sites_manager.sites.clear_selection')}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+              <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </p>
+        <div class="sites-preview" style="display: none;">
+          <div class="selected-site-info"></div>
         </div>
-      HTML
-      
-      html.html_safe
-    end
+        #{render_initialization_script}
+      </div>
+    HTML
+    
+    html.html_safe
+  end
+  
 
     # Hook para agregar campos personalizados adicionales específicos de sitios
     def view_custom_fields_form_upper_box(context={})
@@ -182,6 +187,29 @@ module RedmineSitesManager
       <<-HTML
         <script>
           $(function() {
+            const $searchField = $('#sites-search-field');
+            const $clearBtn = $('.sites-clear-btn');
+    
+            // Mostrar u ocultar el botón de limpiar según el contenido del campo
+            $searchField.on('input', function() {
+              if ($(this).val()) {
+                $clearBtn.show();
+              } else {
+                $clearBtn.hide();
+              }
+            });
+    
+            // Limpiar el campo de búsqueda al hacer clic en el botón de limpiar
+            $clearBtn.on('click', function() {
+              $searchField.val('').trigger('input').focus();
+            });
+    
+            // Ocultar el botón de limpiar inicialmente
+            if (!$searchField.val()) {
+              $clearBtn.hide();
+            }
+    
+            // Inicializar búsqueda si está en el campo correspondiente
             if (typeof initializeSitesSearch !== 'undefined') {
               initializeSitesSearch();
             }
