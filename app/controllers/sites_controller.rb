@@ -44,55 +44,6 @@ class SitesController < ApplicationController
   end
 
 
-  def export_to_csv(sites)
-    require 'csv'
-    
-    # Agregar BOM para Excel
-    bom = "\xEF\xBB\xBF"
-    
-    csv_data = CSV.generate(col_sep: ';', encoding: 'utf-8') do |csv|
-      # Encabezados
-      csv << [
-        'S ID',
-        'Departamento',
-        'Municipio',
-        'Nombre Sitio',
-        'Dirección',
-        'Identificador',
-        'Jerarquía Definitiva',
-        'Fijo/Variable',
-        'Coordinador',
-        'Electrificadora',
-        'NIC',
-        'Campo Adicional 3',
-        'Campo Adicional 4',
-        'Campo Adicional 5'
-      ]
-
-      # Datos
-      sites.find_each do |site|
-        csv << [
-          site.s_id,
-          site.depto,
-          site.municipio,
-          site.nom_sitio,
-          site.direccion,
-          site.identificador,
-          site.jerarquia_definitiva,
-          site.fijo_variable,
-          site.coordinador,
-          site.electrificadora,
-          site.nic,
-          site.campo_adicional_3,
-          site.campo_adicional_4,
-          site.campo_adicional_5
-        ]
-      end
-    end
-
-    bom + csv_data
-  end
-
   def show
     respond_to do |format|
       format.html
@@ -492,6 +443,10 @@ class SitesController < ApplicationController
   def export
     begin
       @sites = build_export_scope
+      send_data generate_csv(@sites),
+      filename: "sitios_#{Date.today.strftime('%Y%m%d')}.csv",
+      type: 'text/csv; charset=utf-8',
+      disposition: 'attachment'
 
       require 'csv'
       
@@ -567,7 +522,7 @@ class SitesController < ApplicationController
     
     scope
   end
-  
+
   def generate_csv(sites)
     require 'csv'
   
