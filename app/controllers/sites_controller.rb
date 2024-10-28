@@ -335,12 +335,20 @@ class SitesController < ApplicationController
       content = content.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '')
       content = content.gsub("\xEF\xBB\xBF", '') # Eliminar BOM si existe
       
-      CSV.parse(content, headers: true, col_sep: detect_separator(content)) do |row|
+      Rails.logger.info "Iniciando importación de archivo CSV"
+      Rails.logger.debug "Contenido del archivo:\n#{content}"
+      
+      csv = CSV.parse(content, headers: true, col_sep: detect_separator(content))
+      
+      csv.each.with_index(1) do |row, index|
+        Rails.logger.debug "Procesando fila #{index}: #{row.to_hash}"
         process_row(row, result)
       end
+  
+      Rails.logger.info "Importación completada: #{result[:imported]} importados, #{result[:updated]} actualizados, #{result[:failed]} fallidos"
     rescue StandardError => e
-      Rails.logger.error "Import error: #{e.message}\n#{e.backtrace.join("\n")}"
-      result[:errors] << e.message
+      Rails.logger.error "Error en importación: #{e.message}\n#{e.backtrace.join("\n")}"
+      result[:errors] << "Error general: #{e.message}"
     end
     
     result
@@ -365,60 +373,77 @@ class SitesController < ApplicationController
   end
 
   def process_row(row, result)
-  return if row.to_hash.values.all?(&:nil?) # Saltar filas vacías
+    return if row.to_hash.values.all?(&:nil?) # Saltar filas vacías
+    
+    attributes = row.to_hash.transform_keys { |k| k.to_s.downcase.strip.gsub(/[(*)]/, '').strip }
+    
+    # Mapeo de campos con nombres alternativos
+    site_attrs = {
+      s_id: find_value(attributes, ['s id', 's_id', 'sid']),
+      depto: find_value(attributes, ['departamento', 'depto']),
+      municipio: find_value(attributes, ['municipio']),
+      nom_sitio: find_value(attributes, ['nombre sitio', 'nom_sitio', 'nombre_sitio']),
+      direccion: find_value(attributes, ['direccion', 'dirección']),
+      identificador: find_value(attributes, ['identificador']),
+      jerarquia_definitiva: find_value(attributes, ['jerarquia definitiva', 'jerarquía definitiva']),
+      fijo_variable: find_value(attributes, ['fijo/variable', 'fijo_variable']),
+      coordinador: find_value(attributes, ['coordinador']),
+      electrificadora: find_value(attributes, ['electrificadora']),
+      nic: find_value(attributes, ['nic']),
+      campo_adicional_3: find_value(attributes, ['campo adicional 3', 'campo_adicional_3']),
+      campo_adicional_4: find_value(attributes, ['campo adicional 4', 'campo_adicional_4']),
+      campo_adicional_5: find_value(attributes, ['campo adicional 5', 'campo_adicional_5'])
+    }
   
-  attributes = row.to_hash.transform_keys { |k| k.to_s.downcase.strip }
-  
-  # Mapeo de campos
-  site_attrs = {
-    s_id: attributes['s id'] || attributes['s_id'] || attributes['sid'],
-    depto: attributes['departamento'] || attributes['depto'],
-    municipio: attributes['municipio'],
-    nom_sitio: attributes['nombre sitio'] || attributes['nom_sitio'] || attributes['nombre_sitio'],
-    direccion: attributes['dirección'] || attributes['direccion'],
-    identificador: attributes['identificador'],
-    jerarquia_definitiva: attributes['jerarquía definitiva'] || attributes['jerarquia_definitiva'],
-    fijo_variable: attributes['fijo/variable'] || attributes['fijo_variable'],
-    coordinador: attributes['coordinador'],
-    electrificadora: attributes['electrificadora'],
-    nic: attributes['nic'],
-    campo_adicional_3: attributes['campo adicional 3'] || attributes['campo_adicional_3'],
-    campo_adicional_4: attributes['campo adicional 4'] || attributes['campo_adicional_4'],
-    campo_adicional_5: attributes['campo adicional 5'] || attributes['campo_adicional_5']
-  }
-
-  # Limpiar y validar valores
-  site_attrs.transform_values! { |v| v.to_s.strip.presence }
-  
-  # Validar campos requeridos
-  if site_attrs[:s_id].blank? || site_attrs[:nom_sitio].blank?
-    result[:failed] += 1
-    result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: S ID y Nombre Sitio son obligatorios"
-    return
-  end
-
-  # Buscar o crear sitio
-  site = FlmSite.find_or_initialize_by(s_id: site_attrs[:s_id])
-  
-  if site.new_record?
-    if site.update(site_attrs)
-      result[:imported] += 1
-    else
+    # Limpiar valores
+    site_attrs.transform_values! { |v| v.to_s.strip.presence }
+    
+    Rails.logger.debug "Procesando fila con atributos: #{site_attrs.inspect}" # Agregar logging
+    
+    # Validar campos requeridos
+    if site_attrs[:s_id].blank? || site_attrs[:nom_sitio].blank?
       result[:failed] += 1
-      result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: #{site.errors.full_messages.join(', ')}"
+      result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed] + 1}: Falta S ID o Nombre Sitio (S ID: '#{site_attrs[:s_id]}', Nombre: '#{site_attrs[:nom_sitio]}')"
+      return
     end
-  else
-    if site.update(site_attrs)
-      result[:updated] += 1
-    else
+  
+    # Buscar o crear sitio
+    site = FlmSite.find_or_initialize_by(s_id: site_attrs[:s_id])
+    
+    begin
+      if site.new_record?
+        if site.update(site_attrs)
+          result[:imported] += 1
+          Rails.logger.info "Sitio importado: #{site_attrs[:s_id]}"
+        else
+          result[:failed] += 1
+          result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: #{site.errors.full_messages.join(', ')}"
+        end
+      else
+        if site.update(site_attrs)
+          result[:updated] += 1
+          Rails.logger.info "Sitio actualizado: #{site_attrs[:s_id]}"
+        else
+          result[:failed] += 1
+          result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: #{site.errors.full_messages.join(', ')}"
+        end
+      end
+    rescue StandardError => e
       result[:failed] += 1
-      result[:errors] << "Fila #{result[:imported] + result[:updated] + result[:failed]}: #{site.errors.full_messages.join(', ')}"
+      result[:errors] << "Error en fila #{result[:imported] + result[:updated] + result[:failed]}: #{e.message}"
+      Rails.logger.error "Error procesando fila: #{e.message}\n#{e.backtrace.join("\n")}"
     end
   end
-rescue StandardError => e
-  result[:failed] += 1
-  result[:errors] << "Error en fila #{result[:imported] + result[:updated] + result[:failed]}: #{e.message}"
-end
+  
+  private
+  
+  def find_value(attributes, possible_keys)
+    possible_keys.each do |key|
+      value = attributes[key]
+      return value if value.present?
+    end
+    nil
+  end
 
   def import_from_csv(file)
     require 'csv'
@@ -467,20 +492,35 @@ end
 
   def valid_import_file?(file)
     extension = File.extname(file.original_filename).downcase
-    ['.csv'].include?(extension)
+    valid_extensions = ['.csv']
+    
+    unless valid_extensions.include?(extension)
+      Rails.logger.error "Extensión de archivo inválida: #{extension}"
+      return false
+    end
+    
+    true
   end
 
   def set_import_flash_message(result)
+    message = []
+    
+    if result[:imported] > 0 || result[:updated] > 0
+      message << l('plugin_sites_manager.messages.import_success',
+                  imported: result[:imported],
+                  updated: result[:updated])
+    end
+    
+    if result[:failed] > 0
+      message << l('plugin_sites_manager.messages.import_partial',
+                  failed: result[:failed])
+    end
+    
     if result[:errors].any?
-      flash[:error] = l('plugin_sites_manager.messages.import_partial',
-                       imported: result[:imported],
-                       updated: result[:updated],
-                       failed: result[:failed])
+      flash[:error] = message.join('. ')
       flash[:warning] = result[:errors].join("<br/>").html_safe
     else
-      flash[:notice] = l('plugin_sites_manager.messages.import_success',
-                        imported: result[:imported],
-                        updated: result[:updated])
+      flash[:notice] = message.join('. ')
     end
   end
 

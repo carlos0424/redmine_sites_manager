@@ -90,6 +90,8 @@ es:
       import_success: "Importación exitosa"
       import_error: "Error en la importación"
       no_file: "Por favor seleccione un archivo"
+      invalid_file_type: "Tipo de archivo no válido. Use archivos CSV"
+
 
       
     buttons:
