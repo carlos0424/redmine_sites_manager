@@ -41,6 +41,16 @@ es:
       search_results: "Resultados de búsqueda"
       no_results: "No se encontraron resultados"
       searching: "Buscando..."
+      import: "Importar Sitios"
+      import_file: "Seleccionar archivo"
+      import_button: "Importar Sitios"
+      importing: "Importando..."
+      download_template: "Descargar Plantilla"
+      import_instructions: "Instrucciones de Importación"
+      instruction_download: "Descargue la plantilla usando el botón superior"
+      instruction_fill: "Complete la plantilla con sus datos"
+      instruction_required_fields: "Campos obligatorios"
+      instruction_format: "Asegúrese de mantener el formato de la plantilla"
 
     fields:
       s_id: "S ID"
@@ -69,6 +79,12 @@ es:
       bulk_delete_success: "Sitios eliminados exitosamente"
       no_selection: "Por favor seleccione al menos un sitio"
       delete_error: "Error al eliminar el sitio"
+      no_file: "Por favor seleccione un archivo"
+      invalid_file_type: "Tipo de archivo no válido. Use .xlsx o .xls"
+      file_too_large: "El archivo es demasiado grande. Máximo 5MB"
+      import_success: "Sitios importados exitosamente"
+      import_error: "Error al importar sitios"
+      import_partial: "%{imported} sitios importados, %{updated} actualizados, %{failed} fallidos"
       
     buttons:
       new_site: "Nuevo Sitio"

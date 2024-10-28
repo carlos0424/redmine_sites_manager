@@ -5,6 +5,7 @@ RedmineApp::Application.routes.draw do
       post 'import'
       get 'download_template'
       post 'bulk_update'
+      get 'import', action: :import_form
     end
     member do
       post 'toggle_status'

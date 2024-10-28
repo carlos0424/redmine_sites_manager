@@ -1,32 +1,75 @@
+<div class="contextual">
+  <%= link_to l('plugin_sites_manager.sites.download_template'), 
+              download_template_sites_path,
+              class: 'icon icon-download' %>
+</div>
+
 <h2><%= l('plugin_sites_manager.sites.import') %></h2>
 
-<div class="box">
-  <%= form_tag import_sites_path, multipart: true do %>
-    <p>
-      <label><%= l('plugin_sites_manager.sites.import_file') %></label>
-      <%= file_field_tag :file, accept: '.xls,.xlsx' %>
-    </p>
-    <p>
-      <%= submit_tag l('plugin_sites_manager.sites.import_button'), class: 'button-positive' %>
+<div class="box tabular">
+  <%= form_tag import_sites_path, multipart: true, class: 'import-form' do %>
+    <div class="import-container">
+      <p>
+        <label><%= l('plugin_sites_manager.sites.import_file') %></label>
+        <%= file_field_tag :file, 
+                          accept: '.xls,.xlsx',
+                          class: 'file-input',
+                          data: { 
+                            max_size: 5.megabytes 
+                          } %>
+      </p>
+      
+      <div class="import-instructions">
+        <h3><%= l('plugin_sites_manager.sites.import_instructions') %></h3>
+        <ul>
+          <li><%= l('plugin_sites_manager.sites.instruction_download') %></li>
+          <li><%= l('plugin_sites_manager.sites.instruction_fill') %></li>
+          <li><%= l('plugin_sites_manager.sites.instruction_required_fields') %>:
+            <ul>
+              <li>S ID (<%= l('plugin_sites_manager.fields.s_id') %>)</li>
+              <li><%= l('plugin_sites_manager.fields.nom_sitio') %></li>
+            </ul>
+          </li>
+          <li><%= l('plugin_sites_manager.sites.instruction_format') %></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <%= submit_tag l('plugin_sites_manager.sites.import_button'), 
+                    class: 'button-positive',
+                    data: { disable_with: l('plugin_sites_manager.sites.importing') } %>
       <%= link_to l(:button_cancel), sites_path, class: 'button' %>
-    </p>
+    </div>
   <% end %>
-  
-  <div class="info">
-    <p><%= l('plugin_sites_manager.sites.import_info') %></p>
-    <ul>
-      <li>S ID</li>
-      <li>DEPTO</li>
-      <li>MUNICIPIO</li>
-      <li>NOM_SITIO</li>
-      <li>DIRECCION</li>
-      <li>IDENTIFICADOR</li>
-      <li>JERARQUIA</li>
-      <li>DEFINITIVA</li>
-      <li>FIJO / VARIABLE</li>
-      <li>COORDINADOR</li>
-      <li>ELECTRIFICADORA</li>
-      <li>NIC</li>
-    </ul>
-  </div>
 </div>
+
+<% content_for :header_tags do %>
+  <%= javascript_include_tag 'sites_import', plugin: 'redmine_sites_manager' %>
+  <style>
+    .import-container {
+      max-width: 800px;
+      margin: 20px auto;
+    }
+    .import-instructions {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+    }
+    .import-instructions h3 {
+      margin-bottom: 10px;
+    }
+    .import-instructions ul {
+      margin-left: 20px;
+    }
+    .import-instructions li {
+      margin-bottom: 5px;
+    }
+    .form-actions {
+      margin-top: 20px;
+      text-align: right;
+    }
+  </style>
+<% end %>

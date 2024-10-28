@@ -105,6 +105,58 @@ class SitesController < ApplicationController
     end
   end
 
+  def download_template
+    require 'axlsx'
+  
+    package = Axlsx::Package.new
+    workbook = package.workbook
+  
+    workbook.add_worksheet(name: "Sitios") do |sheet|
+      # Encabezados
+      sheet.add_row [
+        'S ID',
+        'Departamento',
+        'Municipio',
+        'Nombre Sitio',
+        'Dirección',
+        'Identificador',
+        'Jerarquía Definitiva',
+        'Fijo/Variable',
+        'Coordinador',
+        'Electrificadora',
+        'NIC',
+        'Campo Adicional 3',
+        'Campo Adicional 4',
+        'Campo Adicional 5'
+      ]
+  
+      # Ejemplo de datos
+      sheet.add_row [
+        'S001',
+        'ANTIOQUIA',
+        'MEDELLÍN',
+        'SITIO EJEMPLO',
+        'CALLE 123',
+        'ID001',
+        'B_1',
+        'FIJO',
+        'JUAN PEREZ',
+        'EPM',
+        '12345',
+        '',
+        '',
+        ''
+      ]
+  
+      # Dar formato a la hoja
+      sheet.column_widths 15, 20, 20, 30, 30, 15, 15, 15, 20, 20, 15, 20, 20, 20
+    end
+  
+    send_data package.to_stream.read,
+              filename: "plantilla_sitios_#{Date.today}.xlsx",
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  end
+
   def search
     # No requerir login para la búsqueda
     return render json: { error: 'Unauthorized' }, status: :unauthorized unless User.current.logged?
