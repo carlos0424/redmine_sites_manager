@@ -9,34 +9,29 @@ module RedmineSitesManager
 
     # Hook para agregar el campo de búsqueda de sitios en el formulario de incidencias
     def view_issues_form_details_top(context={})
-    return '' unless show_site_search?(context[:issue])
-    
-    html = <<-HTML
-      <div class="sites-search-container">
-        <p class="site-search-wrapper">
-          <label>#{l('plugin_sites_manager.sites.search_label')}</label>
-          <input type="text" 
-                 id="sites-search-field" 
-                 class="sites-autocomplete ui-autocomplete-input" 
-                 placeholder="#{l('plugin_sites_manager.search.placeholder')}" 
-                 autocomplete="off" />
-          <span class="sites-clear-btn" 
-                title="#{l('plugin_sites_manager.sites.clear_selection')}">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-              <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-        </p>
-        <div class="sites-preview" style="display: none;">
-          <div class="selected-site-info"></div>
+      return '' unless show_site_search?(context[:issue])
+      
+      html = <<-HTML
+        <div class="sites-search-container">
+          <p class="site-search-wrapper">
+            <label>#{l('plugin_sites_manager.sites.search_label')}</label>
+            <input type="text" 
+                   id="sites-search-field" 
+                   class="sites-autocomplete ui-autocomplete-input" 
+                   placeholder="#{l('plugin_sites_manager.search.placeholder')}" 
+                   autocomplete="off" />
+            <span class="sites-clear-btn" 
+                  title="#{l('plugin_sites_manager.sites.clear_selection')}">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+                <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </p>
         </div>
-        #{render_initialization_script}
-      </div>
-    HTML
-    
-    html.html_safe
-  end
-  
+      HTML
+      
+      html.html_safe
+    end
 
     # Hook para agregar campos personalizados adicionales específicos de sitios
     def view_custom_fields_form_upper_box(context={})
@@ -107,11 +102,8 @@ module RedmineSitesManager
 
     def show_site_search?(issue)
       return true if issue.nil? || issue.new_record?
-      
-      # Solo mostrar si el estado es "Nuevo" (ID: 1)
-      # Puedes agregar más estados si es necesario
-      allowed_statuses = [1] # ID de estados permitidos
-      allowed_statuses.include?(issue.status_id)
+      return true if issue.status_id == 1 # Estado "Creado"
+      false
     end
 
     def sites_search_url
@@ -229,8 +221,8 @@ module RedmineSitesManager
       return false unless context[:controller]
       return false unless context[:controller].is_a?(IssuesController)
       
-      # Solo incluir JS en las acciones relevantes
-      allowed_actions = ['new', 'create', 'edit', 'update', 'show']
+      # Solo incluir JS en las acciones relevantes del controlador de issues
+      allowed_actions = ['new', 'create', 'edit', 'update']
       allowed_actions.include?(context[:controller].action_name)
     end
   end

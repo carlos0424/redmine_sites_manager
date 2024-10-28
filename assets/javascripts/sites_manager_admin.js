@@ -6,7 +6,7 @@
     config: {
       searchMinChars: 2,
       maxResults: 10,
-      allowedStatuses: ['1'], // IDs de estados permitidos (1 = Nuevo)
+      createdStatusId: '1', // ID del estado "Creado"
       customFieldsMapping: {
         's_id': 1,
         'nom_sitio': 5,
@@ -23,20 +23,25 @@
     },
 
     init: function() {
-      this.initializeSearchField();
-      this.initializeAutocomplete();
-      this.initializeStatusHandler();
-      this.updateSearchVisibility(); // Verificar visibilidad inicial
+      if (this.shouldInitialize()) {
+        this.initializeSearchField();
+        this.initializeAutocomplete();
+        this.initializeStatusHandler();
+        this.updateSearchVisibility();
+      }
+    },
+
+    shouldInitialize: function() {
+      // Solo inicializar si estamos en el formulario de issue
+      return $('#issue-form').length > 0;
     },
 
     initializeSearchField: function() {
       const searchField = $('#sites-search-field');
       if (!searchField.length) return;
 
-      // Establecer placeholder desde las traducciones
       searchField.attr('placeholder', SitesManager.translations?.searchPlaceholder);
 
-      // Inicializar el botón de limpiar
       const $clearBtn = $('.sites-clear-btn');
       if ($clearBtn.length) {
         searchField.on('input', function() {
@@ -48,8 +53,38 @@
           SitesManager.clearCustomFields();
         });
 
-        // Estado inicial del botón de limpiar
         $clearBtn.toggle(Boolean(searchField.val()));
+      }
+    },
+
+    initializeStatusHandler: function() {
+      $('#issue_status_id').on('change', () => {
+        this.updateSearchVisibility();
+      });
+    },
+
+    updateSearchVisibility: function() {
+      const $container = $('.sites-search-container');
+      if (!$container.length) return;
+
+      const isNewIssue = !$('#issue_id').val();
+      const currentStatus = $('#issue_status_id').val();
+      const isCreatedStatus = currentStatus === this.config.createdStatusId;
+
+      // Mostrar solo si:
+      // 1. Es un nuevo issue (formulario de creación)
+      // O
+      // 2. Está en estado "Creado" (ID 1)
+      const shouldShow = isNewIssue || isCreatedStatus;
+
+      if (shouldShow) {
+        $container.show();
+      } else {
+        $container.hide();
+        // Opcionalmente, limpiar los campos cuando se oculta
+        if (!isNewIssue) {
+          this.clearCustomFields();
+        }
       }
     },
 
@@ -95,41 +130,6 @@
       };
     },
 
-    initializeStatusHandler: function() {
-      const $statusSelect = $('#issue_status_id');
-      if ($statusSelect.length) {
-        $statusSelect.on('change', () => this.updateSearchVisibility());
-        
-        // Observar cambios en el formulario que podrían afectar la visibilidad
-        const observer = new MutationObserver(() => this.updateSearchVisibility());
-        observer.observe($statusSelect[0], { 
-          attributes: true, 
-          attributeFilter: ['value'] 
-        });
-      }
-    },
-
-    updateSearchVisibility: function() {
-      const $container = $('.sites-search-container');
-      if (!$container.length) return;
-
-      const $statusSelect = $('#issue_status_id');
-      const issueId = $('#issue_id').val();
-      
-      // Mostrar el campo solo si:
-      // 1. Es un nuevo issue (no tiene ID) o
-      // 2. El estado actual está en la lista de estados permitidos
-      const shouldShow = !issueId || 
-                        this.config.allowedStatuses.includes($statusSelect.val());
-
-      $container.toggle(shouldShow);
-
-      // Si se está ocultando, limpiar los campos
-      if (!shouldShow) {
-        this.clearCustomFields();
-      }
-    },
-
     updateCustomFields: function(siteData) {
       Object.entries(this.config.customFieldsMapping).forEach(([field, fieldId]) => {
         const element = $(`#issue_custom_field_values_${fieldId}`);
@@ -140,7 +140,7 @@
     },
 
     clearCustomFields: function() {
-      Object.values(this.config.customFieldsMapping).forEach(fieldId => {
+      Object.entries(this.config.customFieldsMapping).forEach(([field, fieldId]) => {
         const element = $(`#issue_custom_field_values_${fieldId}`);
         if (element.length) {
           element.val('').trigger('change');
@@ -151,9 +151,7 @@
 
   // Inicialización cuando el documento está listo
   $(document).ready(function() {
-    if ($('#issue-form').length) {
-      SitesManager.init();
-    }
+    SitesManager.init();
   });
 
 })(jQuery);
