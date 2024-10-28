@@ -92,7 +92,7 @@ class SitesController < ApplicationController
 
     bom + csv_data
   end
-  
+
   def show
     respond_to do |format|
       format.html
@@ -488,11 +488,10 @@ class SitesController < ApplicationController
     end
   end
   
-  private
-  
+  # Agrega el método export en la sección pública
   def export
     begin
-      @sites = FlmSite.all # o build_export_scope si tienes ese método
+      @sites = build_export_scope
 
       require 'csv'
       
@@ -517,7 +516,7 @@ class SitesController < ApplicationController
         ]
 
         # Datos
-        @sites.each do |site|
+        @sites.find_each do |site|
           csv << [
             site.s_id,
             site.depto,
@@ -551,7 +550,7 @@ class SitesController < ApplicationController
   end
 
   private
-  
+
   def build_export_scope
     scope = FlmSite.all
     
