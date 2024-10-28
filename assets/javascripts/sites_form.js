@@ -93,3 +93,31 @@ $(function() {
   $clearButton.on('click', clearFields);
 });
 
+// assets/javascripts/sites_form.js
+$(function() {
+  function shouldEnableSiteSearch() {
+    // Obtener el ID del estado actual
+    var currentStatusId = $('#issue_status_id').val();
+    var isNewRecord = !$('#issue_id').val(); // Si no hay ID, es nuevo
+    
+    // Lista de estados permitidos
+    var allowedStatuses = ['1']; // IDs de estados como strings
+    
+    return isNewRecord || allowedStatuses.includes(currentStatusId);
+  }
+
+  function updateSiteSearchVisibility() {
+    var $container = $('.sites-search-container');
+    if (shouldEnableSiteSearch()) {
+      $container.show();
+    } else {
+      $container.hide();
+    }
+  }
+
+  // Actualizar visibilidad cuando cambie el estado
+  $('#issue_status_id').on('change', updateSiteSearchVisibility);
+  
+  // Actualizar visibilidad inicial
+  updateSiteSearchVisibility();
+});

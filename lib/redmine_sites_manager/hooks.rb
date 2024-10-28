@@ -69,8 +69,10 @@ module RedmineSitesManager
       issue = context[:issue]
       site = find_related_site(issue)
       
-      return '' unless site
-
+       #  podemos permitir la edición si está en ciertos estados
+       allowed_statuses = [1] # IDs de los estados permitidos
+       return '' unless issue.new_record? || allowed_statuses.include?(issue.status_id)
+       
       render_site_details(site)
     end
 
