@@ -109,7 +109,8 @@ class SitesController < ApplicationController
     require 'csv'
   
     begin
-      csv_data = CSV.generate(col_sep: ';') do |csv|
+      # Crear el contenido del CSV con BOM para Excel
+      csv_data = CSV.generate(col_sep: ';', encoding: 'utf-8') do |csv|
         # Encabezados
         csv << [
           'S ID (*)',
@@ -128,7 +129,7 @@ class SitesController < ApplicationController
           'Campo Adicional 5'
         ]
   
-        # Datos de ejemplo
+        # Fila de ejemplo
         csv << [
           'S001',
           'ANTIOQUIA',
@@ -147,10 +148,13 @@ class SitesController < ApplicationController
         ]
       end
   
-      send_data "\xEF\xBB\xBF" + csv_data, # Agregar BOM para mejor compatibilidad con Excel
+      # Agregar BOM para Excel
+      bom = "\xEF\xBB\xBF"
+      send_data bom + csv_data,
                 filename: "plantilla_sitios_#{Date.today.strftime('%Y%m%d')}.csv",
                 type: 'text/csv; charset=utf-8',
                 disposition: 'attachment'
+  
     rescue StandardError => e
       Rails.logger.error "Error generando plantilla: #{e.message}"
       flash[:error] = l('plugin_sites_manager.messages.template_generation_error')
@@ -188,11 +192,10 @@ class SitesController < ApplicationController
         flash.now[:error] = l('plugin_sites_manager.messages.no_file')
         render :import
       end
-    else
-      # GET request - mostrar el formulario de importación
-      render :import
     end
   end
+  
+  private
 
   def toggle_status
     respond_to do |format|
@@ -321,12 +324,70 @@ class SitesController < ApplicationController
     raise l('plugin_sites_manager.messages.no_file') unless params[:file].present?
     raise l('plugin_sites_manager.messages.invalid_file_type') unless valid_import_file?(params[:file])
   
-    case File.extname(params[:file].original_filename).downcase
-    when '.csv'
-      import_from_csv(params[:file])
-    when '.xls', '.xlsx'
-      FlmSite.import_from_excel(params[:file].path)
+    process_import_file(params[:file])
+  end
+  
+
+  def process_import_file(file)
+    require 'csv'
+    
+    result = { imported: 0, updated: 0, failed: 0, errors: [] }
+    
+    begin
+      encoding = detect_file_encoding(file.path)
+      CSV.foreach(file.path, headers: true, col_sep: detect_separator(file.path), encoding: encoding) do |row|
+        process_row(row, result)
+      end
+    rescue StandardError => e
+      Rails.logger.error "Import error: #{e.message}"
+      result[:errors] << e.message
     end
+    
+    result
+  end
+  
+  def detect_file_encoding(file_path)
+    first_bytes = File.read(file_path, 4)
+    return 'bom|utf-8' if first_bytes.start_with?("\xEF\xBB\xBF")
+    'utf-8'
+  end
+  
+  def detect_separator(file_path)
+    first_line = File.open(file_path, &:readline)
+    return ';' if first_line.include?(';')
+    ','
+  end
+  
+  def process_row(row, result)
+    attributes = row.to_hash.transform_keys { |k| k.to_s.downcase.strip }
+    
+    site = FlmSite.find_or_initialize_by(s_id: attributes['s id']&.strip)
+    
+    site_attributes = {
+      s_id: attributes['s id']&.strip,
+      depto: attributes['departamento']&.strip,
+      municipio: attributes['municipio']&.strip,
+      nom_sitio: attributes['nombre sitio']&.strip,
+      direccion: attributes['dirección']&.strip || attributes['direccion']&.strip,
+      identificador: attributes['identificador']&.strip,
+      jerarquia_definitiva: attributes['jerarquía definitiva']&.strip || attributes['jerarquia definitiva']&.strip,
+      fijo_variable: attributes['fijo/variable']&.strip,
+      coordinador: attributes['coordinador']&.strip,
+      electrificadora: attributes['electrificadora']&.strip,
+      nic: attributes['nic']&.strip,
+      campo_adicional_3: attributes['campo adicional 3']&.strip,
+      campo_adicional_4: attributes['campo adicional 4']&.strip,
+      campo_adicional_5: attributes['campo adicional 5']&.strip
+    }
+  
+    if site.new_record?
+      result[:imported] += 1 if site.update(site_attributes)
+    else
+      result[:updated] += 1 if site.update(site_attributes)
+    end
+  rescue StandardError => e
+    result[:failed] += 1
+    result[:errors] << "Error en fila #{$.}: #{e.message}"
   end
   
   def import_from_csv(file)
@@ -376,8 +437,9 @@ class SitesController < ApplicationController
 
   def valid_import_file?(file)
     extension = File.extname(file.original_filename).downcase
-    %w[.csv .xls .xlsx].include?(extension)
+    ['.csv'].include?(extension)
   end
+
   def set_import_flash_message(result)
     if result[:error]
       flash[:error] = "#{l('plugin_sites_manager.messages.import_error')}: #{result[:error]}"

@@ -1,5 +1,5 @@
 require 'redmine'
-require 'axlsx'
+
 # Configuración de localización y carga de archivos de traducción en español
 I18n.load_path += Dir[File.join(File.dirname(__FILE__), 'config', 'locales', '*.yml')]
 I18n.default_locale = :es
