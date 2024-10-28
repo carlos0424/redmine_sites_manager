@@ -15,9 +15,10 @@ Redmine::Plugin.register :redmine_sites_manager do
 
   # Agregar el plugin al menú de administración de Redmine
   menu :admin_menu, :sites_manager, 
-       { controller: 'settings', action: 'plugin', id: 'redmine_sites_manager' },
-       caption: I18n.t('plugin_sites_manager.name', locale: :es, default: 'Gestor de Sitios FLM'),
+       { controller: 'sites', action: 'index' },
+       caption: I18n.t('plugin_sites_manager.name', locale: :es),
        html: { class: 'icon icon-package' }
+
 
   # Definición de configuraciones predeterminadas y asignación del formulario de ajustes
   settings default: {
