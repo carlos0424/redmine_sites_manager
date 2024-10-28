@@ -106,7 +106,12 @@ module RedmineSitesManager
     end
 
     def show_site_search?(issue)
-      issue && (issue.new_record? || issue.status_id.to_s == '1')
+      return true if issue.nil? || issue.new_record?
+      
+      # Solo mostrar si el estado es "Nuevo" (ID: 1)
+      # Puedes agregar más estados si es necesario
+      allowed_statuses = [1] # ID de estados permitidos
+      allowed_statuses.include?(issue.status_id)
     end
 
     def sites_search_url
@@ -221,9 +226,12 @@ module RedmineSitesManager
     end
 
     def should_include_js?(context)
-      context[:controller] && 
-      context[:controller].is_a?(IssuesController) && 
-      ['new', 'create', 'edit', 'update'].include?(context[:controller].action_name)
+      return false unless context[:controller]
+      return false unless context[:controller].is_a?(IssuesController)
+      
+      # Solo incluir JS en las acciones relevantes
+      allowed_actions = ['new', 'create', 'edit', 'update', 'show']
+      allowed_actions.include?(context[:controller].action_name)
     end
   end
   
