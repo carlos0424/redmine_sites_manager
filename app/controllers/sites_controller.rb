@@ -177,6 +177,7 @@ class SitesController < ApplicationController
     render json: { error: e.message }, status: :internal_server_error
   end
 
+
   def import
     if request.post?
       if params[:file].present?
@@ -319,6 +320,7 @@ class SitesController < ApplicationController
       }
     }
   end
+  
 
   def build_site_query
     @query = params[:search].present? ? { search: params[:search] } : {}

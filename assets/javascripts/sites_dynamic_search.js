@@ -8,13 +8,7 @@
       },
   
       bindEvents: function() {
-        // Reinicializar al cambiar el tracker
         $('#issue_tracker_id').on('change', () => {
-          this.initializeSearch();
-        });
-  
-        // Reinicializar en cambios dinámicos
-        $(document).on('change', '#issue_tracker_id', () => {
           this.initializeSearch();
         });
       },
@@ -23,12 +17,10 @@
         const $searchField = $('#sites-search-field');
         if (!$searchField.length) return;
   
-        // Destruir instancia anterior si existe
         if ($searchField.data('uiAutocomplete')) {
           $searchField.autocomplete('destroy');
         }
   
-        // Reinicializar autocomplete
         $searchField.autocomplete({
           source: function(request, response) {
             $.ajax({
@@ -39,9 +31,21 @@
                 authenticity_token: $('meta[name="csrf-token"]').attr('content')
               },
               success: function(data) {
-                response(data);
+                if (data.error) {
+                  response([]);
+                  console.error('Error en búsqueda:', data.error);
+                  return;
+                }
+                response($.map(data, function(item) {
+                  return {
+                    label: item.label,
+                    value: item.value,
+                    site_data: item.site_data
+                  };
+                }));
               },
-              error: function() {
+              error: function(xhr, status, error) {
+                console.error('Error en la búsqueda:', error);
                 response([]);
               }
             });
@@ -58,14 +62,12 @@
             .append(`
               <div class="autocomplete-item">
                 <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
-                <br>
                 <small>${item.site_data.municipio || ''} ${item.site_data.direccion ? '- ' + item.site_data.direccion : ''}</small>
               </div>
             `)
             .appendTo(ul);
         };
   
-        // Manejar el botón de limpiar
         const $clearBtn = $('.sites-clear-btn');
         $clearBtn.off('click').on('click', function() {
           $searchField.val('').trigger('input').focus();
@@ -75,12 +77,11 @@
         $searchField.off('input').on('input', function() {
           $clearBtn.toggle(Boolean($(this).val()));
         }).trigger('input');
-  
-        // Mostrar siempre el contenedor de búsqueda
-        $('.sites-search-container').show();
       },
   
       updateFields: function(siteData) {
+        if (!siteData) return;
+        
         const fieldMapping = window.sitesManagerSettings.fieldMapping;
         Object.entries(fieldMapping).forEach(([fieldId, field]) => {
           if (!siteData[field]) return;
