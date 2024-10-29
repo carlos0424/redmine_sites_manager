@@ -134,9 +134,10 @@ module RedmineSitesManager
           initSiteSearch();
           
           // Manejar cambio de tracker
-          $(document).on('change', '#issue_tracker_id', function() {
-            setTimeout(initSiteSearch, 100);
-          });
+$(document).on('change', '#issue_tracker_id', function() {
+  $('#sites-search-field').autocomplete('destroy');
+  initSiteSearch();
+});
         });
       JS
     end
