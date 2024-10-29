@@ -73,74 +73,24 @@ module RedmineSitesManager
 
     # Hook para agregar JS específico en ciertas páginas
     def view_layouts_base_body_bottom(context={})
-    return unless should_include_js?(context)
-    
-    javascript_tag <<-JS
-      $(function() {
-        $('#sites-search-field').autocomplete({
-          source: function(request, response) {
-            $.ajax({
-              url: '#{url_for(controller: 'sites', action: 'search_local', only_path: true)}',
-              data: { term: request.term },
-              success: function(data) {
-                response(data);
-              },
-              error: function() {
-                console.log("Error al obtener datos de sitios");
-                response([]);
-              }
-            });
-          },
-          minLength: 2,
-          select: function(event, ui) {
-            console.log("Sitio seleccionado:", ui.item);
-            if (ui.item && ui.item.site_data) {
-              updateFields(ui.item.site_data);
-            }
-            return false;
+      return unless should_include_js?(context)
+      
+      javascript_tag <<-JS
+        $(function() {
+          window.sitesManagerSettings = {
+            searchUrl: '#{sites_search_url}',
+            customFieldMappings: #{get_custom_field_mappings.to_json},
+            translations: #{get_translations.to_json},
+            fieldMapping: #{get_field_mapping.to_json}
+          };
+
+          // Inicializar la búsqueda si estamos en el formulario correcto
+          if ($('#sites-search-field').length) {
+            initializeSitesSearch();
           }
         });
-  
-        const $clearBtn = $('.sites-clear-btn');
-        $('#sites-search-field').on('input', function() {
-          $clearBtn.toggle(Boolean($(this).val()));
-        });
-  
-        $clearBtn.on('click', function() {
-          $('#sites-search-field').val('').trigger('input').focus();
-          clearFields();
-        });
-  
-        console.log("Búsqueda de sitios inicializada usando la ruta local");
-      });
-  
-      function updateFields(siteData) {
-        if (!siteData) return;
-        console.log("Actualizando campos con los datos del sitio:", siteData);
-  
-        const fieldMapping = window.sitesManagerSettings?.fieldMapping || {};
-        Object.entries(fieldMapping).forEach(([fieldId, field]) => {
-          if (!siteData[field]) return;
-          const element = $(`#issue_custom_field_values_${fieldId}`);
-          if (element.length) {
-            element.val(siteData[field]).trigger('change');
-          }
-        });
-      }
-  
-      function clearFields() {
-        console.log("Limpiando campos personalizados");
-        const fieldMapping = window.sitesManagerSettings?.fieldMapping || {};
-        Object.values(fieldMapping).forEach(fieldId => {
-          const element = $(`#issue_custom_field_values_${fieldId}`);
-          if (element.length) {
-            element.val('').trigger('change');
-          }
-        });
-      }
-    JS
-  end
-  
+      JS
+    end
 
     private
 
