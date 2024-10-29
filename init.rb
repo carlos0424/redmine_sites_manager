@@ -32,7 +32,7 @@ Redmine::Plugin.register :redmine_sites_manager do
       'coordinador' => '',
       'electrificadora' => '',
       'nic' => '',
-      'campo_adicional_3' => '',
+      'zona_operativa' => '',
       'campo_adicional_4' => '',
       'campo_adicional_5' => ''
     }

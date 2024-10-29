@@ -18,7 +18,7 @@ class FlmSite < ActiveRecord::Base
                   :coordinador,
                   :electrificadora,
                   :nic,
-                  :campo_adicional_3,
+                  :zona_operativa,
                   :campo_adicional_4,
                   :campo_adicional_5
 
@@ -69,7 +69,7 @@ class FlmSite < ActiveRecord::Base
       'coordinador' => header.index('coordinador'),
       'electrificadora' => header.index('electrificadora'),
       'nic' => header.index('nic'),
-      'campo_adicional_3' => header.index('campo adicional 3'),
+      'zona_operativa' => header.index('zona_operativa'),
       'campo_adicional_4' => header.index('campo adicional 4'),
       'campo_adicional_5' => header.index('campo adicional 5')
     }
@@ -146,7 +146,7 @@ class FlmSite < ActiveRecord::Base
         coordinador: coordinador,
         electrificadora: electrificadora,
         nic: nic,
-        campo_adicional_3: campo_adicional_3,
+        zona_operativa: zona_operativa,
         campo_adicional_4: campo_adicional_4,
         campo_adicional_5: campo_adicional_5
       }
@@ -192,7 +192,7 @@ class FlmSite < ActiveRecord::Base
       :coordinador,
       :electrificadora,
       :nic,
-      :campo_adicional_3,
+      :zona_operativa,
       :campo_adicional_4,
       :campo_adicional_5
     ).order(:s_id)

@@ -126,7 +126,7 @@ class SitesController < ApplicationController
           'Coordinador',
           'Electrificadora',
           'NIC',
-          'Campo Adicional 3',
+          'zona_operativa',
           'Campo Adicional 4',
           'Campo Adicional 5'
         ]
@@ -277,7 +277,7 @@ class SitesController < ApplicationController
     params.require(:flm_site).permit(
       :s_id, :depto, :municipio, :nom_sitio, :direccion, :identificador,
       :jerarquia_definitiva, :fijo_variable, :coordinador,
-      :electrificadora, :nic, :campo_adicional_3,
+      :electrificadora, :nic, :zona_operativa,
       :campo_adicional_4, :campo_adicional_5
     )
   end
@@ -425,7 +425,7 @@ class SitesController < ApplicationController
       coordinador: find_value(attributes, ['coordinador']),
       electrificadora: find_value(attributes, ['electrificadora']),
       nic: find_value(attributes, ['nic']),
-      campo_adicional_3: find_value(attributes, ['campo adicional 3', 'campo_adicional_3']),
+      zona_operativa: find_value(attributes, ['zona_operativa', 'zona_operativa']),
       campo_adicional_4: find_value(attributes, ['campo adicional 4', 'campo_adicional_4']),
       campo_adicional_5: find_value(attributes, ['campo adicional 5', 'campo_adicional_5'])
     }
@@ -511,7 +511,7 @@ class SitesController < ApplicationController
         'Coordinador',
         'Electrificadora',
         'NIC',
-        'Campo Adicional 3',
+        'zona_operativa',
         'Campo Adicional 4',
         'Campo Adicional 5'
       ]
@@ -530,7 +530,7 @@ class SitesController < ApplicationController
           site.coordinador,
           site.electrificadora,
           site.nic,
-          site.campo_adicional_3,
+          site.zona_operativa,
           site.campo_adicional_4,
           site.campo_adicional_5
         ]
@@ -589,7 +589,7 @@ class SitesController < ApplicationController
           coordinador: attributes['coordinador'],
           electrificadora: attributes['electrificadora'],
           nic: attributes['nic'],
-          campo_adicional_3: attributes['campo adicional 3'],
+          zona_operativa: attributes['zona_operativa'],
           campo_adicional_4: attributes['campo adicional 4'],
           campo_adicional_5: attributes['campo adicional 5']
         }
