@@ -3,12 +3,6 @@ es:
     name: "Gestor de Sitios FLM"
     title: "Gestor de Sitios FLM"
     description: "Plugin para gestión de sitios FLM"
-    field_buscar_sitios: "Buscar sitios"
-    text_buscar_sitio_placeholder: "Ingrese ID, nombre o ubicación del sitio"
-    text_no_results: "No se encontraron resultados"
-    text_searching: "Buscando..."
-    button_clear: "Limpiar búsqueda"
-    field_site_details: "Detalles del Sitio"
     
     settings:
       title: "Configuración del Gestor de Sitios"
@@ -46,18 +40,6 @@ es:
       export_tooltip: "Exportar todos los sitios a CSV"
       export_success: "Sitios exportados exitosamente"
       export_empty: "No hay sitios para exportar"
-      field_s_id: "S ID"
-      field_nom_sitio: "Nombre del Sitio"
-      field_identificador: "Identificador"
-      field_depto: "Departamento"
-      field_municipio: "Municipio"
-      field_direccion: "Dirección"
-      field_jerarquia_definitiva: "Jerarquía"
-      field_fijo_variable: "Fijo/Variable"
-      field_coordinador: "Coordinador"
-      field_electrificadora: "Electrificadora"
-      field_nic: "NIC"
-      field_zona_operativa: "Zona Operativa"
       
       # Instrucciones de importación
       instructions: "Instrucciones de Importación"
