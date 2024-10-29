@@ -703,32 +703,4 @@ class SitesController < ApplicationController
       flash[:error] = l('plugin_sites_manager.messages.invalid_action')
     end
   end
-  def search_local
-    term = params[:term].to_s.strip.downcase
-    @sites = FlmSite.where("LOWER(s_id) LIKE :term OR LOWER(nom_sitio) LIKE :term OR LOWER(identificador) LIKE :term OR LOWER(municipio) LIKE :term OR LOWER(direccion) LIKE :term OR LOWER(depto) LIKE :term", term: "%#{term}%").limit(10)
-    
-    results = @sites.map do |site|
-      {
-        label: "#{site.s_id} - #{site.nom_sitio}",
-        value: site.nom_sitio,
-        site_data: {
-          s_id: site.s_id,
-          nom_sitio: site.nom_sitio,
-          identificador: site.identificador,
-          depto: site.depto,
-          municipio: site.municipio,
-          direccion: site.direccion,
-          jerarquia_definitiva: site.jerarquia_definitiva,
-          fijo_variable: site.fijo_variable,
-          coordinador: site.coordinador,
-          electrificadora: site.electrificadora,
-          nic: site.nic,
-          zona_operativa: site.zona_operativa
-        }
-      }
-    end
-
-    render json: results
-  end
-end
 end
