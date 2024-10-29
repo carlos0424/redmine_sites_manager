@@ -256,3 +256,95 @@ function clearFields() {
     }
   });
 }
+function initSiteSearch() {
+  const $searchField = $('#sites-search-field');
+  const $clearBtn = $('.sites-clear-btn');
+  
+  if (!$searchField.length) return;
+
+  // Limpiar instancia anterior de autocomplete si existe
+  if ($searchField.data('uiAutocomplete')) {
+    $searchField.autocomplete('destroy');
+  }
+
+  $searchField.autocomplete({
+    source: function(request, response) {
+      $.ajax({
+        url: '/sites/search',
+        data: { 
+          term: request.term,
+          authenticity_token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(data) {
+          response(data);
+        },
+        error: function() {
+          response([]);
+        }
+      });
+    },
+    minLength: 2,
+    select: function(event, ui) {
+      if (ui.item && ui.item.site_data) {
+        updateFields(ui.item.site_data);
+      }
+      return false;
+    }
+  }).autocomplete('instance')._renderItem = function(ul, item) {
+    if (!item.site_data) return $('<li>').append($('<div>').text(item.label)).appendTo(ul);
+
+    return $('<li>')
+      .append(`
+        <div class="ui-menu-item-wrapper">
+          <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
+          <br>
+          <small>${item.site_data.municipio || ''} ${item.site_data.direccion ? '- ' + item.site_data.direccion : ''}</small>
+        </div>
+      `)
+      .appendTo(ul);
+  };
+
+  // Manejar botón de limpiar
+  $clearBtn.off('click').on('click', function() {
+    $searchField.val('').trigger('input').focus();
+    clearFields();
+  });
+
+  $searchField.off('input').on('input', function() {
+    $clearBtn.toggle(Boolean($(this).val()));
+  }).trigger('input');
+}
+
+function updateFields(siteData) {
+  if (!siteData) return;
+  
+  const fieldMapping = window.sitesManagerSettings.fieldMapping;
+  Object.entries(fieldMapping).forEach(([fieldId, field]) => {
+    if (!siteData[field]) return;
+    
+    const $element = $(`#issue_custom_field_values_${fieldId}`);
+    if (!$element.length) return;
+
+    $element
+      .val(siteData[field])
+      .trigger('change')
+      .removeClass('campo-variable campo-fijo');
+
+    if (field === 'fijo_variable') {
+      $element.addClass(siteData[field].toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
+    }
+  });
+}
+
+function clearFields() {
+  const fieldMapping = window.sitesManagerSettings.fieldMapping;
+  Object.keys(fieldMapping).forEach(fieldId => {
+    const $element = $(`#issue_custom_field_values_${fieldId}`);
+    if ($element.length) {
+      $element
+        .val('')
+        .trigger('change')
+        .removeClass('campo-variable campo-fijo');
+    }
+  });
+}

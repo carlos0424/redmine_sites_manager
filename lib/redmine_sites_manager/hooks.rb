@@ -2,26 +2,75 @@ module RedmineSitesManager
   class Hooks < Redmine::Hook::ViewListener
     # Incluir CSS y JS en el header de todas las páginas
     def view_layouts_base_html_head(context={})
-      stylesheet = stylesheet_link_tag('sites_manager', :plugin => 'redmine_sites_manager')
-      javascript = javascript_include_tag('sites_manager_admin', :plugin => 'redmine_sites_manager')
-      "#{stylesheet}\n#{javascript}".html_safe
-    end
+    return unless should_include_assets?(context)
+    
+    stylesheet = stylesheet_link_tag('sites_manager', :plugin => 'redmine_sites_manager')
+    javascript = [
+      javascript_include_tag('jquery-ui.min', :plugin => 'redmine_sites_manager'),
+      javascript_include_tag('sites_manager_admin', :plugin => 'redmine_sites_manager')
+    ].join("\n")
+    
+    styles = <<-CSS
+      <style>
+        .sites-search-container {
+          margin-bottom: 1em;
+        }
+        .site-search-wrapper {
+          display: flex;
+          align-items: center;
+          position: relative;
+          margin-bottom: 10px;
+        }
+        .site-search-wrapper label {
+          float: left;
+          margin-right: 10px;
+          width: 170px;
+          text-align: right;
+        }
+        #sites-search-field {
+          width: 250px;
+          padding: 3px 25px 3px 6px;
+          border: 1px solid #ccc;
+          border-radius: 3px;
+        }
+        .sites-clear-btn {
+          position: absolute;
+          right: 5px;
+          top: 50%;
+          transform: translateY(-50%);
+          cursor: pointer;
+          padding: 4px;
+          color: #666;
+          z-index: 100;
+        }
+        .sites-clear-btn:hover {
+          color: #333;
+        }
+        .ui-autocomplete {
+          max-height: 300px;
+          overflow-y: auto;
+          overflow-x: hidden;
+          z-index: 1000;
+        }
+      </style>
+    CSS
+
+    "#{stylesheet}\n#{javascript}\n#{styles}".html_safe
+  end
 
     # Hook para agregar el campo de búsqueda de sitios en el formulario de incidencias
     def view_issues_form_details_top(context={})
-      return '' unless show_site_search?(context[:issue])
-      
       html = <<-HTML
         <div class="sites-search-container">
           <p class="site-search-wrapper">
-            <label>#{l('plugin_sites_manager.sites.search_label')}</label>
+            <label>#{l(:field_buscar_sitios)}</label>
             <input type="text" 
                    id="sites-search-field" 
-                   class="sites-autocomplete ui-autocomplete-input" 
-                   placeholder="#{l('plugin_sites_manager.search.placeholder')}" 
+                   class="sites-autocomplete" 
+                   placeholder="#{l(:text_buscar_sitio_placeholder)}" 
                    autocomplete="off" />
             <span class="sites-clear-btn" 
-                  title="#{l('plugin_sites_manager.sites.clear_selection')}">
+                  title="#{l(:button_clear)}">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
                 <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -72,87 +121,32 @@ module RedmineSitesManager
     end
 
     # Hook para agregar JS específico en ciertas páginas
-    def view_layouts_base_body_bottom(context={})
-    return unless should_include_js?(context)
-    
-    javascript_tag <<-JS
-      $(function() {
-        // Configuración global
-        window.sitesManagerSettings = {
-          searchUrl: '#{sites_search_url}',
-          customFieldMappings: #{get_custom_field_mappings.to_json},
-          translations: #{get_translations.to_json},
-          fieldMapping: #{get_field_mapping.to_json}
-        };
-  
-        function reinitializeSiteSearch() {
-          console.log('Reinicializando búsqueda de sitios...');
-          if (typeof initializeSitesSearch === 'function') {
-            initializeSitesSearch();
-          }
-        }
-  
-        // Inicialización inicial
-        reinitializeSiteSearch();
-  
-        // Manejar cambio de tracker
-        $(document).on('change', '#issue_tracker_id', function() {
-          console.log('Tracker cambió, reinicializando...');
-          // Esperar a que se actualice el DOM
-          setTimeout(function() {
-            reinitializeSiteSearch();
-            
-            // Asegurarse que el campo de búsqueda esté visible
-            $('.sites-search-container').show();
-            
-            // Reconfigurar el autocompletado
-            const $searchField = $('#sites-search-field');
-            if ($searchField.length) {
-              if ($searchField.data('uiAutocomplete')) {
-                $searchField.autocomplete('destroy');
-              }
-              initializeSitesSearch();
-            }
-          }, 500);
-        });
-  
-        // Manejar actualizaciones dinámicas del formulario
-        $(document).ajaxComplete(function(event, xhr, settings) {
-          if (settings.url && (
-              settings.url.includes('issues/new') || 
-              settings.url.includes('issues/edit') ||
-              settings.url.includes('issues/update') ||
-              settings.url.includes('issues/create')
-          )) {
-            console.log('Ajax completado, reinicializando...');
-            setTimeout(reinitializeSiteSearch, 500);
-          }
-        });
-  
-        // Asegurarse que el autocompletado se mantenga después de cambios dinámicos
-        const observer = new MutationObserver(function(mutations) {
-          mutations.forEach(function(mutation) {
-            if (mutation.target.id === 'all_attributes' || 
-                mutation.target.classList.contains('issue-form')) {
-              console.log('DOM modificado, verificando campo de búsqueda...');
-              setTimeout(reinitializeSiteSearch, 500);
-            }
+     def view_layouts_base_body_bottom(context={})
+      return unless should_include_js?(context)
+      
+      javascript_tag <<-JS
+        $(function() {
+          window.sitesManagerSettings = {
+            searchUrl: '#{sites_search_url}',
+            fieldMapping: #{get_field_mapping.to_json}
+          };
+
+          initSiteSearch();
+          
+          // Manejar cambio de tracker
+          $(document).on('change', '#issue_tracker_id', function() {
+            setTimeout(initSiteSearch, 100);
           });
         });
-  
-        // Observar cambios en el formulario
-        const formContainer = document.querySelector('#all_attributes, .issue-form');
-        if (formContainer) {
-          observer.observe(formContainer, {
-            childList: true,
-            subtree: true
-          });
-        }
-      });
-    JS
-  end
+      JS
+    end
 
     private
+
+    def should_include_assets?(context)
+      return false unless context[:controller]
+      [IssuesController, SitesController].any? { |klass| context[:controller].is_a?(klass) }
+    end
 
     def valid_context?(context)
       context[:controller] && 
@@ -279,13 +273,11 @@ module RedmineSitesManager
       HTML
     end
 
+   
     def should_include_js?(context)
       return false unless context[:controller]
       return false unless context[:controller].is_a?(IssuesController)
-      
-      # Solo incluir JS en las acciones relevantes del controlador de issues
-      allowed_actions = ['new', 'create', 'edit', 'update']
-      allowed_actions.include?(context[:controller].action_name)
+      ['new', 'create', 'edit', 'update'].include?(context[:controller].action_name)
     end
   end
   
