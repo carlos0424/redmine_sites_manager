@@ -73,24 +73,33 @@ module RedmineSitesManager
 
     # Hook para agregar JS específico en ciertas páginas
     def view_layouts_base_body_bottom(context={})
-      return unless should_include_js?(context)
-      
-      javascript_tag <<-JS
-        $(function() {
-          window.sitesManagerSettings = {
-            searchUrl: '#{sites_search_url}',
-            customFieldMappings: #{get_custom_field_mappings.to_json},
-            translations: #{get_translations.to_json},
-            fieldMapping: #{get_field_mapping.to_json}
-          };
-
-          // Inicializar la búsqueda si estamos en el formulario correcto
-          if ($('#sites-search-field').length) {
-            initializeSitesSearch();
-          }
+    return unless should_include_js?(context)
+    
+    javascript_tag <<-JS
+      $(function() {
+        console.log("Inicializando búsqueda de sitios en el hook");
+        window.sitesManagerSettings = {
+          searchUrl: '#{sites_search_url}',
+          customFieldMappings: #{get_custom_field_mappings.to_json},
+          translations: #{get_translations.to_json},
+          fieldMapping: #{get_field_mapping.to_json}
+        };
+  
+        // Inicializar búsqueda si el campo está presente
+        if ($('#sites-search-field').length) {
+          initializeSitesSearch();
+        }
+  
+        // Re-inicialización en cambio de tracker, si es necesario
+        $(document).on('change', '#issue_tracker_id', function() {
+          console.log("Cambio de tracker detectado. Reinicializando búsqueda.");
+          $('#sites-search-field').autocomplete('destroy'); // Destruye autocompletado previo
+          initializeSitesSearch(); // Re-inicializa búsqueda
         });
-      JS
-    end
+      });
+    JS
+  end
+  
 
     private
 
