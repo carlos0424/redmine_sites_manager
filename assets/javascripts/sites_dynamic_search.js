@@ -8,8 +8,22 @@
       },
   
       bindEvents: function() {
-        $('#issue_tracker_id').on('change', () => {
-          this.initializeSearch();
+        // Manejar cambio de tracker
+        $(document).on('change', '#issue_tracker_id', () => {
+          setTimeout(() => this.initializeSearch(), 500);
+        });
+  
+        // Manejar el botón de limpiar
+        $(document).on('click', '.sites-clear-btn', () => {
+          const $searchField = $('#sites-search-field');
+          $searchField.val('').trigger('input').focus();
+          this.clearFields();
+        });
+  
+        // Mostrar/ocultar botón de limpiar
+        $(document).on('input', '#sites-search-field', function() {
+          const $clearBtn = $('.sites-clear-btn');
+          $clearBtn.toggle(Boolean($(this).val()));
         });
       },
   
@@ -17,10 +31,12 @@
         const $searchField = $('#sites-search-field');
         if (!$searchField.length) return;
   
+        // Resetear autocompletado si existe
         if ($searchField.data('uiAutocomplete')) {
           $searchField.autocomplete('destroy');
         }
   
+        // Inicializar autocompletado
         $searchField.autocomplete({
           source: (request, response) => {
             $.ajax({
@@ -31,18 +47,11 @@
                 authenticity_token: $('meta[name="csrf-token"]').attr('content')
               },
               success: (data) => {
-                if (data.error) {
-                  console.error('Error en búsqueda:', data.error);
-                  // Intentar con la ruta alternativa si la primera falla
-                  this.fallbackSearch(request.term, response);
-                  return;
-                }
                 response(data);
               },
               error: (xhr, status, error) => {
-                console.error('Error en la búsqueda:', error);
-                // Intentar con la ruta alternativa
-                this.fallbackSearch(request.term, response);
+                console.error('Error en búsqueda:', error);
+                response([]);
               }
             });
           },
@@ -50,53 +59,57 @@
           select: (event, ui) => {
             if (ui.item) {
               this.updateFields(ui.item.site_data);
+              return false;
             }
-            return false;
+          },
+          response: (event, ui) => {
+            // Manejar respuestas vacías
+            if (!ui.content.length) {
+              const noResult = { label: 'No se encontraron resultados' };
+              ui.content.push(noResult);
+            }
           }
         }).autocomplete('instance')._renderItem = (ul, item) => {
+          if (!item.site_data) {
+            return $('<li>')
+              .append(`<div class="ui-menu-item-wrapper">${item.label}</div>`)
+              .appendTo(ul);
+          }
+  
           return $('<li>')
             .append(`
-              <div class="autocomplete-item">
+              <div class="ui-menu-item-wrapper">
                 <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
+                <br>
                 <small>${item.site_data.municipio || ''} ${item.site_data.direccion ? '- ' + item.site_data.direccion : ''}</small>
               </div>
             `)
             .appendTo(ul);
         };
   
+        // Inicializar estado del botón de limpiar
         const $clearBtn = $('.sites-clear-btn');
-        $clearBtn.off('click').on('click', () => {
-          $searchField.val('').trigger('input').focus();
-          this.clearFields();
-        });
-  
-        $searchField.off('input').on('input', function() {
-          $clearBtn.toggle(Boolean($(this).val()));
-        }).trigger('input');
-      },
-  
-      fallbackSearch: function(term, response) {
-        $.ajax({
-          url: '/sites/autocomplete',
-          method: 'GET',
-          data: { 
-            term: term,
-            authenticity_token: $('meta[name="csrf-token"]').attr('content')
-          },
-          success: (data) => {
-            response(data);
-          },
-          error: (xhr, status, error) => {
-            console.error('Error en búsqueda alternativa:', error);
-            response([]);
-          }
-        });
+        $clearBtn.toggle(Boolean($searchField.val()));
       },
   
       updateFields: function(siteData) {
         if (!siteData) return;
         
-        const fieldMapping = window.sitesManagerSettings.fieldMapping;
+        const fieldMapping = {
+          1: 's_id',
+          5: 'nom_sitio',
+          8: 'identificador',
+          10: 'depto',
+          2: 'municipio',
+          3: 'direccion',
+          6: 'jerarquia_definitiva',
+          7: 'fijo_variable',
+          9: 'coordinador',
+          25: 'electrificadora',
+          26: 'nic',
+          32: 'zona_operativa'
+        };
+  
         Object.entries(fieldMapping).forEach(([fieldId, field]) => {
           if (!siteData[field]) return;
           
@@ -115,8 +128,8 @@
       },
   
       clearFields: function() {
-        const fieldMapping = window.sitesManagerSettings.fieldMapping;
-        Object.values(fieldMapping).forEach(fieldId => {
+        const fieldIds = [1, 5, 8, 10, 2, 3, 6, 7, 9, 25, 26, 32];
+        fieldIds.forEach(fieldId => {
           const element = $(`#issue_custom_field_values_${fieldId}`);
           if (element.length) {
             element
@@ -128,8 +141,16 @@
       }
     };
   
+    // Inicializar cuando el documento está listo
     $(document).ready(function() {
       SitesManagerDynamic.init();
+  
+      // Reinicializar cuando se carga contenido dinámicamente
+      $(document).ajaxComplete(function(event, xhr, settings) {
+        if (settings.url.includes('issues/new') || settings.url.includes('issues/edit')) {
+          SitesManagerDynamic.init();
+        }
+      });
     });
   
   })(jQuery);
