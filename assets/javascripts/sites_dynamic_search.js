@@ -22,7 +22,7 @@
         }
   
         $searchField.autocomplete({
-          source: function(request, response) {
+          source: (request, response) => {
             $.ajax({
               url: '/sites/search',
               method: 'GET',
@@ -30,34 +30,30 @@
                 term: request.term,
                 authenticity_token: $('meta[name="csrf-token"]').attr('content')
               },
-              success: function(data) {
+              success: (data) => {
                 if (data.error) {
-                  response([]);
                   console.error('Error en búsqueda:', data.error);
+                  // Intentar con la ruta alternativa si la primera falla
+                  this.fallbackSearch(request.term, response);
                   return;
                 }
-                response($.map(data, function(item) {
-                  return {
-                    label: item.label,
-                    value: item.value,
-                    site_data: item.site_data
-                  };
-                }));
+                response(data);
               },
-              error: function(xhr, status, error) {
+              error: (xhr, status, error) => {
                 console.error('Error en la búsqueda:', error);
-                response([]);
+                // Intentar con la ruta alternativa
+                this.fallbackSearch(request.term, response);
               }
             });
           },
           minLength: 2,
-          select: function(event, ui) {
+          select: (event, ui) => {
             if (ui.item) {
-              SitesManagerDynamic.updateFields(ui.item.site_data);
+              this.updateFields(ui.item.site_data);
             }
             return false;
           }
-        }).autocomplete('instance')._renderItem = function(ul, item) {
+        }).autocomplete('instance')._renderItem = (ul, item) => {
           return $('<li>')
             .append(`
               <div class="autocomplete-item">
@@ -69,14 +65,32 @@
         };
   
         const $clearBtn = $('.sites-clear-btn');
-        $clearBtn.off('click').on('click', function() {
+        $clearBtn.off('click').on('click', () => {
           $searchField.val('').trigger('input').focus();
-          SitesManagerDynamic.clearFields();
+          this.clearFields();
         });
   
         $searchField.off('input').on('input', function() {
           $clearBtn.toggle(Boolean($(this).val()));
         }).trigger('input');
+      },
+  
+      fallbackSearch: function(term, response) {
+        $.ajax({
+          url: '/sites/autocomplete',
+          method: 'GET',
+          data: { 
+            term: term,
+            authenticity_token: $('meta[name="csrf-token"]').attr('content')
+          },
+          success: (data) => {
+            response(data);
+          },
+          error: (xhr, status, error) => {
+            console.error('Error en búsqueda alternativa:', error);
+            response([]);
+          }
+        });
       },
   
       updateFields: function(siteData) {

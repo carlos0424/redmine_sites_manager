@@ -2,12 +2,12 @@ class SitesController < ApplicationController
   unloadable
 
   before_action :require_login
-  before_action :require_admin  # Cambiar esto para requerir admin en todas las acciones
+  before_action :require_admin, except: [:search, :autocomplete]  # Excluir search y autocomplete
   before_action :find_site, only: [:show, :edit, :update, :destroy, :toggle_status]
   before_action :load_site_collections, only: [:new, :create, :edit, :update]
   before_action :build_site_query, only: [:index]
   skip_before_action :verify_authenticity_token, only: [:search]
-  before_action :verify_sites_manager_access
+  before_action :verify_sites_manager_access, except: [:search, :autocomplete]
 
 
   helper :sort
@@ -163,18 +163,56 @@ class SitesController < ApplicationController
   end
 
   def search
-    # No requerir login para la búsqueda
+    return render json: { error: 'Unauthorized' }, status: :unauthorized unless User.current.logged?
+
+    begin
+      term = params[:term].to_s.strip.downcase
+      @sites = FlmSite.where(
+        "LOWER(s_id) LIKE :term OR 
+         LOWER(nom_sitio) LIKE :term OR 
+         LOWER(identificador) LIKE :term OR 
+         LOWER(municipio) LIKE :term OR 
+         LOWER(direccion) LIKE :term OR 
+         LOWER(depto) LIKE :term", 
+        term: "%#{term}%"
+      ).limit(10)
+
+      results = @sites.map { |site| 
+        {
+          id: site.id,
+          label: "#{site.s_id} - #{site.nom_sitio}",
+          value: site.nom_sitio,
+          site_data: {
+            s_id: site.s_id,
+            nom_sitio: site.nom_sitio,
+            identificador: site.identificador,
+            depto: site.depto,
+            municipio: site.municipio,
+            direccion: site.direccion,
+            jerarquia_definitiva: site.jerarquia_definitiva,
+            fijo_variable: site.fijo_variable,
+            coordinador: site.coordinador,
+            electrificadora: site.electrificadora,
+            nic: site.nic,
+            zona_operativa: site.zona_operativa
+          }
+        }
+      }
+
+      render json: results
+    rescue => e
+      Rails.logger.error "Error en búsqueda de sitios: #{e.message}\n#{e.backtrace.join("\n")}"
+      render json: { error: e.message }, status: :internal_server_error
+    end
+  end
+
+  # Agregar acción de autocompletado como alternativa
+  def autocomplete
     return render json: { error: 'Unauthorized' }, status: :unauthorized unless User.current.logged?
 
     term = params[:term].to_s.strip.downcase
     @sites = search_sites(term)
-
-    respond_to do |format|
-      format.json { render json: format_sites_for_json(@sites) }
-    end
-  rescue StandardError => e
-    Rails.logger.error "Error en búsqueda de sitios: #{e.message}"
-    render json: { error: e.message }, status: :internal_server_error
+    render json: format_sites_for_json(@sites)
   end
 
 
@@ -291,13 +329,12 @@ class SitesController < ApplicationController
        LOWER(identificador) LIKE :term OR 
        LOWER(municipio) LIKE :term OR 
        LOWER(direccion) LIKE :term OR 
-       LOWER(NIC) LIKE :term OR 
        LOWER(depto) LIKE :term", 
       term: "%#{term}%"
     ).limit(10)
   end
 
-  def format_sites_for_json(sites)
+ def format_sites_for_json(sites)
     sites.map { |site| 
       {
         id: site.id,

@@ -1,10 +1,11 @@
 RedmineApp::Application.routes.draw do
   resources :sites do
     collection do
-      get 'search', :to => 'sites#search'  
-      get 'export', to: 'sites#export' # Ruta para exportación de sitios
-      get 'import' # Muestra el formulario de importación
-      post 'import' # Procesa el archivo
+      get 'search'
+      get 'autocomplete'  # Agregar ruta alternativa
+      get 'export'
+      get 'import'
+      post 'import'
       get 'download_template'
       post 'bulk_update'
     end
