@@ -73,118 +73,24 @@ module RedmineSitesManager
 
     # Hook para agregar JS específico en ciertas páginas
     def view_layouts_base_body_bottom(context={})
-    return unless should_include_js?(context)
-    
-    javascript_tag <<-JS
-      $(function() {
-        console.log("Inicializando búsqueda de sitios en el hook");
-  
-        window.sitesManagerSettings = {
-          searchUrl: '#{sites_search_url}',
-          customFieldMappings: #{get_custom_field_mappings.to_json},
-          translations: #{get_translations.to_json},
-          fieldMapping: #{get_field_mapping.to_json}
-        };
-  
-        // Inicializar la búsqueda al cargar la página si el campo está presente
-        if ($('#sites-search-field').length) {
-          initializeSitesSearch();
-        }
-  
-        // Re-inicialización en cambio de tracker
-        $(document).on('change', '#issue_tracker_id', function() {
-          console.log("Cambio de tracker detectado. Reinicializando búsqueda.");
-          
-          // Destruye el autocompletado previo y verifica el estado antes de re-inicializar
-          $('#sites-search-field').autocomplete('destroy');
-          console.log("Autocompletado destruido. Intentando re-inicializar.");
-  
-          // Esperar un momento para asegurar que el campo esté listo para re-inicializar
-          setTimeout(function() {
+      return unless should_include_js?(context)
+      
+      javascript_tag <<-JS
+        $(function() {
+          window.sitesManagerSettings = {
+            searchUrl: '#{sites_search_url}',
+            customFieldMappings: #{get_custom_field_mappings.to_json},
+            translations: #{get_translations.to_json},
+            fieldMapping: #{get_field_mapping.to_json}
+          };
+
+          // Inicializar la búsqueda si estamos en el formulario correcto
+          if ($('#sites-search-field').length) {
             initializeSitesSearch();
-            console.log("initializeSitesSearch invocado tras cambio de tracker.");
-          }, 100); // Espera 100 ms para asegurar que el DOM esté actualizado
-        });
-      });
-  
-      function initializeSitesSearch() {
-        console.log("Ejecutando initializeSitesSearch");
-  
-        const $searchField = $('#sites-search-field');
-        if (!$searchField.length) {
-          console.log("Campo de búsqueda no encontrado en initializeSitesSearch");
-          return;
-        }
-  
-        // Configuración de autocompletado
-        $searchField.autocomplete({
-          source: function(request, response) {
-            $.ajax({
-              url: window.sitesManagerSettings.searchUrl,
-              data: { term: request.term },
-              success: function(data) {
-                console.log("Datos recibidos:", data);
-                response(data);
-              },
-              error: function() {
-                console.log("Error al obtener datos de sitios");
-                response([]);
-              }
-            });
-          },
-          minLength: 2,
-          select: function(event, ui) {
-            console.log("Sitio seleccionado:", ui.item);
-            if (ui.item && ui.item.site_data) {
-              updateFields(ui.item.site_data);
-            }
-            return false;
           }
         });
-  
-        // Configurar el botón de limpiar búsqueda
-        const $clearBtn = $('.sites-clear-btn');
-        $searchField.on('input', function() {
-          $clearBtn.toggle(Boolean($(this).val()));
-        });
-        
-        $clearBtn.on('click', function() {
-          console.log("Limpieza de campo de búsqueda");
-          $searchField.val('').trigger('input').focus();
-          clearFields();
-        });
-        
-        console.log("Búsqueda de sitios inicializada");
-      }
-  
-      function updateFields(siteData) {
-        if (!siteData) return;
-        console.log("Actualizando campos con los datos del sitio:", siteData);
-        
-        const fieldMapping = window.sitesManagerSettings.fieldMapping;
-        Object.entries(fieldMapping).forEach(([fieldId, field]) => {
-          if (!siteData[field]) return;
-          const element = $(`#issue_custom_field_values_${fieldId}`);
-          if (element.length) {
-            element.val(siteData[field]).trigger('change');
-          }
-        });
-      }
-  
-      function clearFields() {
-        console.log("Limpiando campos personalizados");
-        const fieldMapping = window.sitesManagerSettings.fieldMapping;
-        Object.values(fieldMapping).forEach(fieldId => {
-          const element = $(`#issue_custom_field_values_${fieldId}`);
-          if (element.length) {
-            element.val('').trigger('change');
-          }
-        });
-      }
-    JS
-  end
-  
-  
+      JS
+    end
 
     private
 
