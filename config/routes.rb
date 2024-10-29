@@ -1,7 +1,7 @@
 RedmineApp::Application.routes.draw do
   resources :sites do
     collection do
-      get 'search'
+      get 'sites/search', to: 'sites#search', defaults: { format: 'json' }
       get 'autocomplete'  # Agregar ruta alternativa
       get 'export'
       get 'import'
