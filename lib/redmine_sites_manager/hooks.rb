@@ -1,6 +1,5 @@
 module RedmineSitesManager
   class Hooks < Redmine::Hook::ViewListener
-    # Incluir CSS y JS en el header de todas las páginas
     def view_layouts_base_html_head(context={})
       return unless should_include_assets?(context)
 
@@ -52,13 +51,27 @@ module RedmineSitesManager
             overflow-x: hidden;
             z-index: 1000;
           }
+          .ui-menu-item {
+            padding: 5px 8px;
+            cursor: pointer;
+          }
+          .ui-menu-item:hover {
+            background: #f5f5f5;
+          }
+          .ui-menu-item strong {
+            display: block;
+            color: #333;
+          }
+          .ui-menu-item small {
+            color: #666;
+            font-size: 0.9em;
+          }
         </style>
       CSS
 
       "#{stylesheet}\n#{javascript}\n#{styles}".html_safe
     end
 
-    # Hook para agregar el campo de búsqueda de sitios en el formulario de incidencias
     def view_issues_form_details_top(context={})
       html = <<-HTML
         <div class="sites-search-container">
@@ -82,105 +95,130 @@ module RedmineSitesManager
       html.html_safe
     end
 
-    # Hook para agregar JS específico en ciertas páginas
     def view_layouts_base_body_bottom(context={})
       return unless should_include_js?(context)
       
       javascript_tag <<-JS
         $(function() {
-          console.log("Inicializando búsqueda de sitios");
-
           window.sitesManagerSettings = {
             searchUrl: '#{sites_search_url}',
             fieldMapping: #{get_field_mapping.to_json}
           };
 
-          // Inicialización de la búsqueda de sitios al cargar la página
-          initSiteSearch();
+          function reinitializeSearch() {
+            const $searchField = $('#sites-search-field');
+            
+            // Destruir instancia previa si existe
+            if ($searchField.data('uiAutocomplete')) {
+              $searchField.autocomplete('destroy');
+            }
 
-          // Manejar cambio de tracker
-          $(document).on('change', '#issue_tracker_id', function() {
-            console.log("Cambio de tracker detectado. Reinicializando búsqueda.");
-            $('#sites-search-field').autocomplete('destroy'); // Destruir autocompletado previo
-            initSiteSearch(); // Re-inicializar búsqueda
-          });
-        });
+            if ($searchField.length) {
+              // Configurar autocompletado
+              $searchField.autocomplete({
+                source: function(request, response) {
+                  $.ajax({
+                    url: window.sitesManagerSettings.searchUrl,
+                    data: { 
+                      term: request.term,
+                      authenticity_token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(data) {
+                      response(data);
+                    },
+                    error: function() {
+                      response([]);
+                    }
+                  });
+                },
+                minLength: 2,
+                select: function(event, ui) {
+                  if (ui.item && ui.item.site_data) {
+                    updateFields(ui.item.site_data);
+                  }
+                  return false;
+                }
+              }).autocomplete('instance')._renderItem = function(ul, item) {
+                if (!item.site_data) {
+                  return $('<li>')
+                    .append($('<div>').text(item.label))
+                    .appendTo(ul);
+                }
 
-        function initSiteSearch() {
-          console.log("Ejecutando initSiteSearch");
-          const $searchField = $('#sites-search-field');
+                return $('<li>')
+                  .append(`
+                    <div class="ui-menu-item-wrapper">
+                      <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
+                      <small>${item.site_data.municipio || ''} ${item.site_data.direccion ? '- ' + item.site_data.direccion : ''}</small>
+                    </div>
+                  `)
+                  .appendTo(ul);
+              };
 
-          if (!$searchField.length) {
-            console.log("Campo de búsqueda no encontrado");
-            return;
+              // Configurar botón de limpiar
+              const $clearBtn = $('.sites-clear-btn');
+              
+              $clearBtn.off('click').on('click', function() {
+                $searchField.val('').trigger('input').focus();
+                clearFields();
+              });
+
+              $searchField.off('input').on('input', function() {
+                $clearBtn.toggle(Boolean($(this).val()));
+              }).trigger('input');
+            }
           }
 
-          // Configuración de autocompletado
-          $searchField.autocomplete({
-            source: function(request, response) {
-              $.ajax({
-                url: window.sitesManagerSettings.searchUrl,
-                data: { term: request.term },
-                success: function(data) {
-                  console.log("Datos recibidos:", data);
-                  response(data);
-                },
-                error: function() {
-                  console.log("Error al obtener datos de sitios");
-                  response([]);
+          function updateFields(siteData) {
+            if (!siteData) return;
+            
+            const fieldMapping = window.sitesManagerSettings.fieldMapping;
+            Object.entries(fieldMapping).forEach(([fieldId, field]) => {
+              if (!siteData[field]) return;
+              
+              const $element = $(`#issue_custom_field_values_${fieldId}`);
+              if ($element.length) {
+                $element
+                  .val(siteData[field])
+                  .trigger('change')
+                  .removeClass('campo-variable campo-fijo');
+
+                if (field === 'fijo_variable') {
+                  $element.addClass(siteData[field].toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
                 }
-              });
-            },
-            minLength: 2,
-            select: function(event, ui) {
-              console.log("Sitio seleccionado:", ui.item);
-              if (ui.item && ui.item.site_data) {
-                updateFields(ui.item.site_data);
               }
-              return false;
-            }
+            });
+          }
+
+          function clearFields() {
+            const fieldMapping = window.sitesManagerSettings.fieldMapping;
+            Object.keys(fieldMapping).forEach(fieldId => {
+              const $element = $(`#issue_custom_field_values_${fieldId}`);
+              if ($element.length) {
+                $element
+                  .val('')
+                  .trigger('change')
+                  .removeClass('campo-variable campo-fijo');
+              }
+            });
+          }
+
+          // Inicialización inicial
+          reinitializeSearch();
+
+          // Reinicializar cuando cambia el tracker
+          $('#issue_tracker_id').on('change', function() {
+            setTimeout(reinitializeSearch, 100);
           });
 
-          // Configurar el botón de limpiar búsqueda
-          const $clearBtn = $('.sites-clear-btn');
-          $searchField.on('input', function() {
-            $clearBtn.toggle(Boolean($(this).val()));
-          });
-          
-          $clearBtn.on('click', function() {
-            console.log("Limpieza de campo de búsqueda");
-            $searchField.val('').trigger('input').focus();
-            clearFields();
-          });
-          
-          // Inicialización terminada
-          console.log("Búsqueda de sitios inicializada");
-        }
-
-        function updateFields(siteData) {
-          if (!siteData) return;
-          console.log("Actualizando campos con los datos del sitio:", siteData);
-          
-          const fieldMapping = window.sitesManagerSettings.fieldMapping;
-          Object.entries(fieldMapping).forEach(([fieldId, field]) => {
-            if (!siteData[field]) return;
-            const element = $(`#issue_custom_field_values_${fieldId}`);
-            if (element.length) {
-              element.val(siteData[field]).trigger('change');
+          // Reinicializar después de cargas AJAX
+          $(document).ajaxComplete(function(event, xhr, settings) {
+            if (settings.url && (settings.url.includes('issues/new') || 
+                               settings.url.includes('issues/edit'))) {
+              setTimeout(reinitializeSearch, 100);
             }
           });
-        }
-
-        function clearFields() {
-          console.log("Limpiando campos personalizados");
-          const fieldMapping = window.sitesManagerSettings.fieldMapping;
-          Object.values(fieldMapping).forEach(fieldId => {
-            const element = $(`#issue_custom_field_values_${fieldId}`);
-            if (element.length) {
-              element.val('').trigger('change');
-            }
-          });
-        }
+        });
       JS
     end
 
@@ -189,6 +227,12 @@ module RedmineSitesManager
     def should_include_assets?(context)
       return false unless context[:controller]
       [IssuesController, SitesController].any? { |klass| context[:controller].is_a?(klass) }
+    end
+
+    def should_include_js?(context)
+      return false unless context[:controller]
+      return false unless context[:controller].is_a?(IssuesController)
+      ['new', 'create', 'edit', 'update'].include?(context[:controller].action_name)
     end
 
     def sites_search_url
