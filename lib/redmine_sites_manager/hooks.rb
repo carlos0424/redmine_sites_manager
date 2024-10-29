@@ -1,3 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+  <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
 module RedmineSitesManager
   class Hooks < Redmine::Hook::ViewListener
     # Incluir CSS y JS en el header de todas las páginas
@@ -78,6 +82,7 @@ module RedmineSitesManager
     javascript_tag <<-JS
       $(function() {
         console.log("Inicializando búsqueda de sitios en el hook");
+  
         window.sitesManagerSettings = {
           searchUrl: '#{sites_search_url}',
           customFieldMappings: #{get_custom_field_mappings.to_json},
@@ -85,20 +90,104 @@ module RedmineSitesManager
           fieldMapping: #{get_field_mapping.to_json}
         };
   
-        // Inicializar búsqueda si el campo está presente
+        // Inicializar la búsqueda al cargar la página si el campo está presente
         if ($('#sites-search-field').length) {
           initializeSitesSearch();
         }
   
-        // Re-inicialización en cambio de tracker, si es necesario
+        // Re-inicialización en cambio de tracker
         $(document).on('change', '#issue_tracker_id', function() {
           console.log("Cambio de tracker detectado. Reinicializando búsqueda.");
-          $('#sites-search-field').autocomplete('destroy'); // Destruye autocompletado previo
-          initializeSitesSearch(); // Re-inicializa búsqueda
+          
+          // Destruye el autocompletado previo y verifica el estado antes de re-inicializar
+          $('#sites-search-field').autocomplete('destroy');
+          console.log("Autocompletado destruido. Intentando re-inicializar.");
+  
+          // Esperar un momento para asegurar que el campo esté listo para re-inicializar
+          setTimeout(function() {
+            initializeSitesSearch();
+            console.log("initializeSitesSearch invocado tras cambio de tracker.");
+          }, 100); // Espera 100 ms para asegurar que el DOM esté actualizado
         });
       });
+  
+      function initializeSitesSearch() {
+        console.log("Ejecutando initializeSitesSearch");
+  
+        const $searchField = $('#sites-search-field');
+        if (!$searchField.length) {
+          console.log("Campo de búsqueda no encontrado en initializeSitesSearch");
+          return;
+        }
+  
+        // Configuración de autocompletado
+        $searchField.autocomplete({
+          source: function(request, response) {
+            $.ajax({
+              url: window.sitesManagerSettings.searchUrl,
+              data: { term: request.term },
+              success: function(data) {
+                console.log("Datos recibidos:", data);
+                response(data);
+              },
+              error: function() {
+                console.log("Error al obtener datos de sitios");
+                response([]);
+              }
+            });
+          },
+          minLength: 2,
+          select: function(event, ui) {
+            console.log("Sitio seleccionado:", ui.item);
+            if (ui.item && ui.item.site_data) {
+              updateFields(ui.item.site_data);
+            }
+            return false;
+          }
+        });
+  
+        // Configurar el botón de limpiar búsqueda
+        const $clearBtn = $('.sites-clear-btn');
+        $searchField.on('input', function() {
+          $clearBtn.toggle(Boolean($(this).val()));
+        });
+        
+        $clearBtn.on('click', function() {
+          console.log("Limpieza de campo de búsqueda");
+          $searchField.val('').trigger('input').focus();
+          clearFields();
+        });
+        
+        console.log("Búsqueda de sitios inicializada");
+      }
+  
+      function updateFields(siteData) {
+        if (!siteData) return;
+        console.log("Actualizando campos con los datos del sitio:", siteData);
+        
+        const fieldMapping = window.sitesManagerSettings.fieldMapping;
+        Object.entries(fieldMapping).forEach(([fieldId, field]) => {
+          if (!siteData[field]) return;
+          const element = $(`#issue_custom_field_values_${fieldId}`);
+          if (element.length) {
+            element.val(siteData[field]).trigger('change');
+          }
+        });
+      }
+  
+      function clearFields() {
+        console.log("Limpiando campos personalizados");
+        const fieldMapping = window.sitesManagerSettings.fieldMapping;
+        Object.values(fieldMapping).forEach(fieldId => {
+          const element = $(`#issue_custom_field_values_${fieldId}`);
+          if (element.length) {
+            element.val('').trigger('change');
+          }
+        });
+      }
     JS
   end
+  
   
 
     private
