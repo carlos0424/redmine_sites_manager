@@ -3,17 +3,17 @@
   
     window.SitesManagerDynamic = {
       init: function() {
-        this.bindTrackerChange();
         this.initializeSearch();
+        this.bindEvents();
       },
   
-      bindTrackerChange: function() {
-        // Manejar cambios de tracker para reinicializar la búsqueda
+      bindEvents: function() {
+        // Reinicializar al cambiar el tracker
         $('#issue_tracker_id').on('change', () => {
           this.initializeSearch();
         });
   
-        // Manejar cambios por APIs externas
+        // Reinicializar en cambios dinámicos
         $(document).on('change', '#issue_tracker_id', () => {
           this.initializeSearch();
         });
@@ -23,7 +23,7 @@
         const $searchField = $('#sites-search-field');
         if (!$searchField.length) return;
   
-        // Destruir instancia anterior de autocomplete si existe
+        // Destruir instancia anterior si existe
         if ($searchField.data('uiAutocomplete')) {
           $searchField.autocomplete('destroy');
         }
@@ -81,22 +81,8 @@
       },
   
       updateFields: function(siteData) {
-        const fieldMapping = {
-          's_id': 1,
-          'nom_sitio': 5,
-          'identificador': 7,
-          'depto': 2,
-          'municipio': 3,
-          'direccion': 6,
-          'jerarquia_definitiva': 8,
-          'fijo_variable': 10,
-          'coordinador': 9,
-          'electrificadora': 25,
-          'nic': 26,
-          'zona_operativa': 32
-        };
-  
-        Object.entries(fieldMapping).forEach(([field, fieldId]) => {
+        const fieldMapping = window.sitesManagerSettings.fieldMapping;
+        Object.entries(fieldMapping).forEach(([fieldId, field]) => {
           if (!siteData[field]) return;
           
           const element = $(`#issue_custom_field_values_${fieldId}`);
@@ -114,21 +100,7 @@
       },
   
       clearFields: function() {
-        const fieldMapping = {
-          's_id': 1,
-          'nom_sitio': 5,
-          'identificador': 7,
-          'depto': 2,
-          'municipio': 3,
-          'direccion': 6,
-          'jerarquia_definitiva': 8,
-          'fijo_variable': 10,
-          'coordinador': 9,
-          'electrificadora': 25,
-          'nic': 26,
-          'zona_operativa': 32
-        };
-  
+        const fieldMapping = window.sitesManagerSettings.fieldMapping;
         Object.values(fieldMapping).forEach(fieldId => {
           const element = $(`#issue_custom_field_values_${fieldId}`);
           if (element.length) {
@@ -141,14 +113,8 @@
       }
     };
   
-    // Inicializar cuando el documento está listo
     $(document).ready(function() {
       SitesManagerDynamic.init();
-  
-      // Reinicializar cuando se carga un nuevo formulario dinámicamente
-      $(document).on('ajax:complete', function() {
-        SitesManagerDynamic.init();
-      });
     });
   
   })(jQuery);
