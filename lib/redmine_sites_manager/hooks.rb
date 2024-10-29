@@ -73,24 +73,84 @@ module RedmineSitesManager
 
     # Hook para agregar JS específico en ciertas páginas
     def view_layouts_base_body_bottom(context={})
-      return unless should_include_js?(context)
-      
-      javascript_tag <<-JS
-        $(function() {
-          window.sitesManagerSettings = {
-            searchUrl: '#{sites_search_url}',
-            customFieldMappings: #{get_custom_field_mappings.to_json},
-            translations: #{get_translations.to_json},
-            fieldMapping: #{get_field_mapping.to_json}
-          };
-
-          // Inicializar la búsqueda si estamos en el formulario correcto
-          if ($('#sites-search-field').length) {
+    return unless should_include_js?(context)
+    
+    javascript_tag <<-JS
+      $(function() {
+        // Configuración global
+        window.sitesManagerSettings = {
+          searchUrl: '#{sites_search_url}',
+          customFieldMappings: #{get_custom_field_mappings.to_json},
+          translations: #{get_translations.to_json},
+          fieldMapping: #{get_field_mapping.to_json}
+        };
+  
+        function reinitializeSiteSearch() {
+          console.log('Reinicializando búsqueda de sitios...');
+          if (typeof initializeSitesSearch === 'function') {
             initializeSitesSearch();
           }
+        }
+  
+        // Inicialización inicial
+        reinitializeSiteSearch();
+  
+        // Manejar cambio de tracker
+        $(document).on('change', '#issue_tracker_id', function() {
+          console.log('Tracker cambió, reinicializando...');
+          // Esperar a que se actualice el DOM
+          setTimeout(function() {
+            reinitializeSiteSearch();
+            
+            // Asegurarse que el campo de búsqueda esté visible
+            $('.sites-search-container').show();
+            
+            // Reconfigurar el autocompletado
+            const $searchField = $('#sites-search-field');
+            if ($searchField.length) {
+              if ($searchField.data('uiAutocomplete')) {
+                $searchField.autocomplete('destroy');
+              }
+              initializeSitesSearch();
+            }
+          }, 500);
         });
-      JS
-    end
+  
+        // Manejar actualizaciones dinámicas del formulario
+        $(document).ajaxComplete(function(event, xhr, settings) {
+          if (settings.url && (
+              settings.url.includes('issues/new') || 
+              settings.url.includes('issues/edit') ||
+              settings.url.includes('issues/update') ||
+              settings.url.includes('issues/create')
+          )) {
+            console.log('Ajax completado, reinicializando...');
+            setTimeout(reinitializeSiteSearch, 500);
+          }
+        });
+  
+        // Asegurarse que el autocompletado se mantenga después de cambios dinámicos
+        const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.target.id === 'all_attributes' || 
+                mutation.target.classList.contains('issue-form')) {
+              console.log('DOM modificado, verificando campo de búsqueda...');
+              setTimeout(reinitializeSiteSearch, 500);
+            }
+          });
+        });
+  
+        // Observar cambios en el formulario
+        const formContainer = document.querySelector('#all_attributes, .issue-form');
+        if (formContainer) {
+          observer.observe(formContainer, {
+            childList: true,
+            subtree: true
+          });
+        }
+      });
+    JS
+  end
 
     private
 
