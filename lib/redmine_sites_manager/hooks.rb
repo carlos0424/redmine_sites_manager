@@ -2,17 +2,15 @@ module RedmineSitesManager
   class Hooks < Redmine::Hook::ViewListener
     # Incluir CSS y JS en el header de todas las páginas
     def view_layouts_base_html_head(context={})
-      return unless should_include_assets?(context)
-
-      [
-        stylesheet_link_tag('sites_manager', plugin: 'redmine_sites_manager'),
-        javascript_include_tag('sites_manager_admin', plugin: 'redmine_sites_manager'),
-        javascript_include_tag('sites_dynamic_search', plugin: 'redmine_sites_manager'),
-        javascript_include_tag('jquery-ui.min', plugin: 'redmine_sites_manager')
-      ].join("\n").html_safe
+      stylesheet = stylesheet_link_tag('sites_manager', :plugin => 'redmine_sites_manager')
+      javascript = javascript_include_tag('sites_manager_admin', :plugin => 'redmine_sites_manager')
+      "#{stylesheet}\n#{javascript}".html_safe
     end
 
+    # Hook para agregar el campo de búsqueda de sitios en el formulario de incidencias
     def view_issues_form_details_top(context={})
+      return '' unless show_site_search?(context[:issue])
+      
       html = <<-HTML
         <div class="sites-search-container">
           <p class="site-search-wrapper">
@@ -35,9 +33,12 @@ module RedmineSitesManager
       html.html_safe
     end
 
+    # Hook para agregar campos personalizados adicionales específicos de sitios
     def view_custom_fields_form_upper_box(context={})
-      return '' unless context[:custom_field]&.respond_to?(:site_related)
-      
+    return '' unless context[:custom_field]
+    
+    # Verificar si el campo personalizado tiene el método `site_related`
+    if context[:custom_field].respond_to?(:site_related)
       <<-HTML.html_safe
         <div class="site-related-fields">
           <p>
@@ -51,16 +52,26 @@ module RedmineSitesManager
           </p>
         </div>
       HTML
+    else
+      # Si no tiene `site_related`, retorna un string vacío sin renderizar contenido adicional
+      ''
     end
+  end
+  
 
+    # Hook para agregar campos personalizados en la vista de detalles de incidencia
     def view_issues_show_details_bottom(context={})
       issue = context[:issue]
       site = find_related_site(issue)
       
-      return '' unless issue.new_record? || issue.status_id == 1
+       #  podemos permitir la edición si está en ciertos estados
+       allowed_statuses = [1] # IDs de los estados permitidos
+       return '' unless issue.new_record? || allowed_statuses.include?(issue.status_id)
+       
       render_site_details(site)
     end
 
+    # Hook para agregar JS específico en ciertas páginas
     def view_layouts_base_body_bottom(context={})
       return unless should_include_js?(context)
       
@@ -73,6 +84,7 @@ module RedmineSitesManager
             fieldMapping: #{get_field_mapping.to_json}
           };
 
+          // Inicializar la búsqueda si estamos en el formulario correcto
           if ($('#sites-search-field').length) {
             initializeSitesSearch();
           }
@@ -82,14 +94,16 @@ module RedmineSitesManager
 
     private
 
-    def should_include_assets?(context)
-      return false unless context[:controller]
-      [IssuesController, SitesController].any? { |klass| context[:controller].is_a?(klass) }
+    def valid_context?(context)
+      context[:controller] && 
+      (context[:controller].is_a?(IssuesController) || 
+       context[:controller].is_a?(SitesController))
     end
 
-    def should_include_js?(context)
-      return false unless context[:controller]&.is_a?(IssuesController)
-      ['new', 'create', 'edit', 'update'].include?(context[:controller].action_name)
+    def show_site_search?(issue)
+      return true if issue.nil? || issue.new_record?
+      return true if issue.status_id == 1 # Estado "Creado"
+      false
     end
 
     def sites_search_url
@@ -137,8 +151,6 @@ module RedmineSitesManager
     end
 
     def render_site_details(site)
-      return '' unless site
-
       <<-HTML.html_safe
         <div class="sites-details">
           <hr />
@@ -171,5 +183,55 @@ module RedmineSitesManager
         </p>
       HTML
     end
+
+    def render_initialization_script
+      <<-HTML
+        <script>
+          $(function() {
+            const $searchField = $('#sites-search-field');
+            const $clearBtn = $('.sites-clear-btn');
+    
+            // Mostrar u ocultar el botón de limpiar según el contenido del campo
+            $searchField.on('input', function() {
+              if ($(this).val()) {
+                $clearBtn.show();
+              } else {
+                $clearBtn.hide();
+              }
+            });
+    
+            // Limpiar el campo de búsqueda al hacer clic en el botón de limpiar
+            $clearBtn.on('click', function() {
+              $searchField.val('').trigger('input').focus();
+            });
+    
+            // Ocultar el botón de limpiar inicialmente
+            if (!$searchField.val()) {
+              $clearBtn.hide();
+            }
+    
+            // Inicializar búsqueda si está en el campo correspondiente
+            if (typeof initializeSitesSearch !== 'undefined') {
+              initializeSitesSearch();
+            }
+          });
+        </script>
+      HTML
+    end
+
+    def should_include_js?(context)
+      return false unless context[:controller]
+      return false unless context[:controller].is_a?(IssuesController)
+      
+      # Solo incluir JS en las acciones relevantes del controlador de issues
+      allowed_actions = ['new', 'create', 'edit', 'update']
+      allowed_actions.include?(context[:controller].action_name)
+    end
+  end
+  
+  # Registrar los hooks para assets
+  class SitesManagerHooks < Redmine::Hook::ViewListener
+    render_on :view_layouts_base_html_head,
+              partial: 'sites_manager/html_head'
   end
 end
