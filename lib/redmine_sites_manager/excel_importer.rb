@@ -49,7 +49,8 @@ module RedmineSitesManager
         'fijo_variable' => header.index('fijo  / variable'),
         'coordinador' => header.index('coordinador'),
         'electrificadora' => header.index('electrificadora'),
-        'nic' => header.index('nic')
+        'nic' => header.index('nic'),
+        'zona_operativa' => header.index('zona_operativa')
       }
       
       validate_columns(column_mapping)

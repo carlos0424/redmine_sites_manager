@@ -10,7 +10,8 @@ $(function() {
     7: 'fijo_variable',
     9: 'coordinador',
     25: 'electrificadora',
-    26: 'nic'
+    26: 'nic',
+    32: 'zona_operativa'
   };
 
   $('#sites-search-field').autocomplete({

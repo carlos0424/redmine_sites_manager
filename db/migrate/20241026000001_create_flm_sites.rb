@@ -13,9 +13,9 @@ class CreateFlmSites < ActiveRecord::Migration[5.2]
         t.string :coordinador
         t.string :electrificadora
         t.string :nic
+        t.string :zona_operativa
         
         # Campos adicionales para futuro crecimiento
-        t.string :zona_operativa
         t.string :campo_adicional_4
         t.string :campo_adicional_5
         

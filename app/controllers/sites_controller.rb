@@ -313,7 +313,8 @@ class SitesController < ApplicationController
           fijo_variable: site.fijo_variable,
           coordinador: site.coordinador,
           electrificadora: site.electrificadora,
-          nic: site.nic
+          nic: site.nic,
+          zona_operativa: site.zona_operativa
         }
       }
     }

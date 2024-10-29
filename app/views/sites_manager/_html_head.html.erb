@@ -167,7 +167,8 @@
       'fijo_variable': 10,
       'coordinador': 9,
       'electrificadora': 25,
-      'nic': 26
+      'nic': 26,
+      'zona_operativa': 32
     };
 
     // Cargar datos de sitios
@@ -184,6 +185,7 @@
       coordinador: site.coordinador,
       electrificadora: site.electrificadora,
       nic: site.nic
+      zona_operativa: site.zona_operativa
     }}.to_json %>;
 
     if (typeof initializeSitesSearch === 'undefined') {

@@ -18,7 +18,8 @@
         'fijo_variable': 10,
         'coordinador': 9,
         'electrificadora': 25,
-        'nic': 26
+        'nic': 26,
+        'zona_operativa': 32
       }
     },
 

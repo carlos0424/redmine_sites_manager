@@ -131,7 +131,8 @@ module RedmineSitesManager
         7 => 'fijo_variable',
         9 => 'coordinador',
         25=> 'electrificadora',
-        26=> 'nic'
+        26=> 'nic',
+        32=> 'zona_operativa'
       }
     end
 
@@ -164,6 +165,7 @@ module RedmineSitesManager
             #{render_site_field(site, 'coordinador')}
             #{render_site_field(site, 'electrificadora')}
             #{render_site_field(site, 'nic')}
+            #{render_site_field(site, 'zona_operativa')}
           </div>
         </div>
       HTML
