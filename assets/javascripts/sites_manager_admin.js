@@ -6,7 +6,6 @@
     config: {
       searchMinChars: 2,
       maxResults: 10,
-      createdStatusId: '1', // ID del estado "Creado"
       customFieldsMapping: {
         's_id': 1,
         'nom_sitio': 5,
@@ -24,68 +23,29 @@
     },
 
     init: function() {
-      if (this.shouldInitialize()) {
-        this.initializeSearchField();
-        this.initializeAutocomplete();
-        this.initializeStatusHandler();
-        this.updateSearchVisibility();
-      }
-    },
-
-    shouldInitialize: function() {
-      // Solo inicializar si estamos en el formulario de issue
-      return $('#issue-form').length > 0;
+      this.initializeSearchField();
+      this.initializeAutocomplete();
+      this.bindTrackerChangeEvent();
     },
 
     initializeSearchField: function() {
       const searchField = $('#sites-search-field');
       if (!searchField.length) return;
 
-      searchField.attr('placeholder', SitesManager.translations?.searchPlaceholder);
+      searchField.attr('placeholder', SitesManager.translations?.placeholder);
 
-      const $clearBtn = $('.sites-clear-btn');
-      if ($clearBtn.length) {
+      const clearBtn = $('.sites-clear-btn');
+      if (clearBtn.length) {
         searchField.on('input', function() {
-          $clearBtn.toggle(Boolean($(this).val()));
+          clearBtn.toggle(Boolean($(this).val()));
         });
 
-        $clearBtn.on('click', function() {
+        clearBtn.on('click', function() {
           searchField.val('').trigger('input').focus();
           SitesManager.clearCustomFields();
         });
 
-        $clearBtn.toggle(Boolean(searchField.val()));
-      }
-    },
-
-    initializeStatusHandler: function() {
-      $('#issue_status_id').on('change', () => {
-        this.updateSearchVisibility();
-      });
-    },
-
-    updateSearchVisibility: function() {
-      const $container = $('.sites-search-container');
-      if (!$container.length) return;
-
-      const isNewIssue = !$('#issue_id').val();
-      const currentStatus = $('#issue_status_id').val();
-      const isCreatedStatus = currentStatus === this.config.createdStatusId;
-
-      // Mostrar solo si:
-      // 1. Es un nuevo issue (formulario de creación)
-      // O
-      // 2. Está en estado "Creado" (ID 1)
-      const shouldShow = isNewIssue || isCreatedStatus;
-
-      if (shouldShow) {
-        $container.show();
-      } else {
-        $container.hide();
-        // Opcionalmente, limpiar los campos cuando se oculta
-        if (!isNewIssue) {
-          this.clearCustomFields();
-        }
+        clearBtn.toggle(Boolean(searchField.val()));
       }
     },
 
@@ -131,6 +91,13 @@
       };
     },
 
+    bindTrackerChangeEvent: function() {
+      // Detectar cambio de tracker y reinicializar el campo de búsqueda
+      $('#issue_tracker_id').on('change', function() {
+        SitesManager.initializeAutocomplete();
+      });
+    },
+
     updateCustomFields: function(siteData) {
       Object.entries(this.config.customFieldsMapping).forEach(([field, fieldId]) => {
         const element = $(`#issue_custom_field_values_${fieldId}`);
@@ -150,7 +117,7 @@
     }
   };
 
-  // Inicialización cuando el documento está listo
+  // Inicializar cuando el documento está listo
   $(document).ready(function() {
     SitesManager.init();
   });
