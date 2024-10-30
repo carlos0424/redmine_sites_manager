@@ -30,26 +30,22 @@
     },
 
     setupEventHandlers: function() {
-      // Manejar cambio de tracker
       $(document).on('change', '#issue_tracker_id', () => {
         console.log("Tracker changed");
         this.handleTrackerChange();
       });
 
-      // Manejar botón de limpiar
       $(document).on('click', '.sites-clear-btn', () => {
         console.log("Clear button clicked");
         this.clearSearch();
       });
 
-      // Manejar entrada de búsqueda
       $(document).on('input', '#sites-search-field', function() {
         const hasValue = Boolean($(this).val());
         $('.sites-clear-btn').toggle(hasValue);
         $(this).toggleClass('has-value', hasValue);
       });
 
-      // Manejar actualizaciones dinámicas
       $(document).ajaxComplete((event, xhr, settings) => {
         if (settings.url && (settings.url.includes('issues/new') || settings.url.includes('issues/edit'))) {
           console.log("Form updated via AJAX");
@@ -106,6 +102,7 @@
           if (ui.item && ui.item.site_data) {
             console.log("Selected site data:", ui.item.site_data);
             this.updateCustomFields(ui.item.site_data);
+            searchField.val(`${ui.item.site_data.s_id} - ${ui.item.site_data.nom_sitio}`);
             return false;
           }
         },
@@ -116,7 +113,6 @@
         return this.renderSearchResult(ul, item);
       };
 
-      // Configurar estado inicial del botón de limpiar
       $('.sites-clear-btn').toggle(Boolean(searchField.val()));
     },
 
@@ -139,21 +135,19 @@
           .appendTo(ul);
       }
 
+      const details = [
+        item.site_data.municipio,
+        item.site_data.identificador,
+        `${item.site_data.fijo_variable || ''}`
+      ].filter(Boolean).join(' | ');
+
       const siteInfo = `
         <div class="ui-menu-item-wrapper site-result">
           <div class="site-main-info">
             <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
           </div>
           <div class="site-details">
-            <span class="municipio">
-              <i class="icon icon-location"></i>${item.site_data.municipio || ''}
-            </span>
-            <span class="identificador">
-              <i class="icon icon-location"></i>${item.site_data.identificador || ''}
-            </span>
-            <span class="fijo_variable">
-              <i class="icon icon-user"></i>${item.site_data.fijo_variable || ''}
-            </span>
+            ${details}
           </div>
         </div>
       `;
@@ -175,16 +169,10 @@
         
         if (element.length) {
           console.log(`Updating field ${elementId} with value:`, value);
-          
-          // Aplicar el valor y disparar eventos
           element
             .val(value)
             .trigger('change')
-            .trigger('blur');
-
-
-          // Añadir clase de campo actualizado
-          element
+            .trigger('blur')
             .addClass('field-updated')
             .delay(1000)
             .queue(function(next) {
@@ -196,7 +184,6 @@
         }
       });
 
-      // Mostrar notificación de actualización
       this.showUpdateNotification();
     },
 
@@ -229,7 +216,7 @@
           element
             .val('')
             .trigger('change')
-            .removeClass('campo-variable campo-fijo field-updated');
+            .removeClass('field-updated');
         }
       });
     },
