@@ -148,8 +148,8 @@
             <span class="municipio">
               <i class="icon icon-location"></i>${item.site_data.municipio || ''}
             </span>
-            <span class="tipo ${item.site_data.fijo_variable?.toLowerCase()}">
-              ${item.site_data.fijo_variable || ''}
+            <span class="nom_sitio">
+              <i class="icon icon-location"></i>${item.site_data.nom_sitio || ''}
             </span>
             <span class="coordinador">
               <i class="icon icon-user"></i>${item.site_data.coordinador || ''}
