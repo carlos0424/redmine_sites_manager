@@ -16,17 +16,24 @@ module RedmineSitesManager
         private
   
         def verify_sites_manager_access
-          unless User.current.admin?
+          allowed_roles = Setting.plugin_redmine_sites_manager['allowed_roles'] || ['admin']
+          
+          has_access = allowed_roles.include?('admin') && User.current.admin? ||
+                       User.current.roles.any? { |role| allowed_roles.include?(role.name) }
+        
+          unless has_access
+            Rails.logger.warn "Acceso denegado a #{User.current.login} para RedmineSitesManager"
+        
             if request.xhr?
-              render json: { error: l('plugin_sites_manager.messages.access_denied') }, 
-                     status: :forbidden
+              render json: { error: l('plugin_sites_manager.messages.access_denied') }, status: :forbidden
             else
               flash[:error] = l('plugin_sites_manager.messages.access_denied')
-              redirect_to home_path
+              redirect_back(fallback_location: home_path)
             end
             return false
           end
         end
+        
       end
     end
   end
