@@ -28,8 +28,6 @@
 
 .site-search-wrapper {
   position: relative;
-  display: flex;
-  flex-direction: column;
   margin-bottom: 10px;
 }
 
@@ -43,33 +41,36 @@
 
 #sites-search-field {
   width: 100%;
-  padding: 10px 35px 10px 12px;
+  height: 30px;
+  padding: 5px 30px 5px 10px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 3px;
   font-size: 14px;
-  line-height: 1.4;
+  color: #000;
+  box-sizing: border-box;
 }
-
 .sites-clear-btn {
   position: absolute;
-  right: 10px;
+  right: 5px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #999;
-  transition: all 0.2s;
   width: 20px;
   height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  color: #666;
+  font-size: 16px;
   background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  z-index: 2;
 }
 
 .sites-clear-btn:hover {
   color: #333;
-  background-color: #f0f0f0;
 }
 
 .sites-clear-btn svg {
@@ -93,7 +94,6 @@
 .ui-menu-item {
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid #eee;
 }
 
 .ui-menu-item:last-child {
@@ -107,29 +107,22 @@
 }
 
 .site-result {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  padding: 8px 10px;
 }
 
 .site-main-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin-bottom: 4px;
 }
 
 .site-main-info strong {
-  color: #333;
+  color: #000;
   font-size: 14px;
 }
 
 .site-details {
-  display: flex;
-  gap: 8px;
   color: #666;
   font-size: 12px;
 }
-
 .site-details span {
   display: inline-flex;
   align-items: center;

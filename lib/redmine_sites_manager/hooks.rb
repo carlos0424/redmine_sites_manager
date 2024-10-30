@@ -12,27 +12,27 @@ module RedmineSitesManager
     end
 
     def view_issues_form_details_top(context={})
-      return '' unless show_site_search?(context[:issue])
-      
-      html = <<-HTML
-        <div class="sites-search-container">
-          <p class="site-search-wrapper">
-            <label>#{l('plugin_sites_manager.sites.search_label')}</label>
-            <div class="search-input-wrapper">
-              <input type="text" 
-                     id="sites-search-field" 
-                     class="sites-autocomplete" 
-                     placeholder="#{l('plugin_sites_manager.search.placeholder')}" 
-                     autocomplete="off" />
-              <span class="sites-clear-btn" 
-                    title="#{l('plugin_sites_manager.sites.clear_selection')}">×</span>
-            </div>
-          </p>
-        </div>
-      HTML
-      
-      html.html_safe
-    end
+    return '' unless show_site_search?(context[:issue])
+    
+    html = <<-HTML
+      <div class="sites-search-container">
+        <p class="site-search-wrapper">
+          <label>#{l('plugin_sites_manager.sites.search_label')}</label>
+          <div style="position: relative;">
+            <input type="text" 
+                   id="sites-search-field" 
+                   class="sites-autocomplete" 
+                   placeholder="#{l('plugin_sites_manager.search.placeholder')}" 
+                   autocomplete="off" />
+            <span class="sites-clear-btn" 
+                  title="#{l('plugin_sites_manager.sites.clear_selection')}">×</span>
+          </div>
+        </p>
+      </div>
+    HTML
+    
+    html.html_safe
+  end
 
     private
 
