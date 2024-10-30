@@ -182,12 +182,6 @@
             .trigger('change')
             .trigger('blur');
 
-          // Manejar estilos especiales para fijo/variable
-          if (field === 'fijo_variable') {
-            element
-              .removeClass('campo-variable campo-fijo')
-              .addClass(value.toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
-          }
 
           // Añadir clase de campo actualizado
           element
