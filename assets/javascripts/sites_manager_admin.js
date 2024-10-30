@@ -138,6 +138,7 @@
       const details = [
         item.site_data.municipio,
         item.site_data.identificador,
+        item.site_data.zona_operativa,
         `${item.site_data.fijo_variable || ''}`
       ].filter(Boolean).join(' | ');
 
