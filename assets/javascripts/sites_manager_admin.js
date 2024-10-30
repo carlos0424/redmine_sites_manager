@@ -23,43 +23,30 @@
     },
 
     init: function() {
-      console.log("Initializing SitesManager...");
       this.setupEventHandlers();
       this.initializeSearchField();
       this.setupAjaxIndicator();
     },
 
     setupEventHandlers: function() {
-      $(document).on('change', '#issue_tracker_id', () => {
-        console.log("Tracker changed");
-        this.handleTrackerChange();
-      });
-
-      $(document).on('click', '.sites-clear-btn', () => {
-        console.log("Clear button clicked");
-        this.clearSearch();
-      });
-
-      $(document).on('input', '#sites-search-field', function() {
-        const hasValue = Boolean($(this).val());
-        $('.sites-clear-btn').toggle(hasValue);
-        $(this).toggleClass('has-value', hasValue);
-      });
-
-      $(document).ajaxComplete((event, xhr, settings) => {
-        if (settings.url && (settings.url.includes('issues/new') || settings.url.includes('issues/edit'))) {
-          console.log("Form updated via AJAX");
-          this.initializeSearchField();
-        }
-      });
+      $(document)
+        .on('change', '#issue_tracker_id', () => this.handleTrackerChange())
+        .on('click', '.sites-clear-btn', () => this.clearSearch())
+        .on('input', '#sites-search-field', function() {
+          $('.sites-clear-btn').toggle(Boolean($(this).val()));
+          $(this).toggleClass('has-value', Boolean($(this).val()));
+        })
+        .ajaxComplete((event, xhr, settings) => {
+          if (settings.url?.includes('issues/new') || settings.url?.includes('issues/edit')) {
+            this.initializeSearchField();
+          }
+        });
     },
 
     setupAjaxIndicator: function() {
-      $(document).ajaxStart(() => {
-        $('#sites-search-field').addClass('loading');
-      }).ajaxStop(() => {
-        $('#sites-search-field').removeClass('loading');
-      });
+      $(document)
+        .ajaxStart(() => $('#sites-search-field').addClass('loading'))
+        .ajaxStop(() => $('#sites-search-field').removeClass('loading'));
     },
 
     handleTrackerChange: function() {
@@ -77,54 +64,44 @@
       this.destroyAutocomplete();
 
       searchField.autocomplete({
-        source: (request, response) => {
-          if (request.term.length < this.config.searchMinChars) return;
-
-          $.ajax({
-            url: '/sites/search',
-            method: 'GET',
-            data: { 
-              term: request.term,
-              authenticity_token: $('meta[name="csrf-token"]').attr('content')
-            },
-            success: (data) => {
-              console.log("Search results:", data);
-              response(this.formatSearchResults(data));
-            },
-            error: (xhr, status, error) => {
-              console.error("Search error:", error);
-              response([]);
-            }
-          });
-        },
+        source: this.handleSearch.bind(this),
         minLength: this.config.searchMinChars,
         select: (event, ui) => {
-          if (ui.item && ui.item.site_data) {
-            console.log("Selected site data:", ui.item.site_data);
+          if (ui.item?.site_data) {
             this.updateCustomFields(ui.item.site_data);
             searchField.val(`${ui.item.site_data.s_id} - ${ui.item.site_data.nom_sitio}`);
             return false;
           }
         },
-        focus: function(event, ui) {
-          event.preventDefault();
-        }
-      }).autocomplete('instance')._renderItem = (ul, item) => {
-        return this.renderSearchResult(ul, item);
-      };
+        focus: (event) => event.preventDefault()
+      }).autocomplete('instance')._renderItem = (ul, item) => this.renderSearchResult(ul, item);
 
       $('.sites-clear-btn').toggle(Boolean(searchField.val()));
     },
 
+    handleSearch: function(request, response) {
+      if (request.term.length < this.config.searchMinChars) return;
+
+      $.ajax({
+        url: '/sites/search',
+        method: 'GET',
+        data: { 
+          term: request.term,
+          authenticity_token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: (data) => response(this.formatSearchResults(data)),
+        error: () => response([])
+      });
+    },
+
     formatSearchResults: function(data) {
-      if (!data || !data.length) {
+      if (!data?.length) {
         return [{
           label: 'No se encontraron resultados',
           value: '',
           site_data: null
         }];
       }
-
       return data.slice(0, this.config.maxResults);
     },
 
@@ -139,7 +116,7 @@
         item.site_data.municipio,
         item.site_data.identificador,
         item.site_data.zona_operativa,
-        `${item.site_data.fijo_variable || ''}`
+        item.site_data.fijo_variable
       ].filter(Boolean).join(' | ');
 
       const siteInfo = `
@@ -147,53 +124,40 @@
           <div class="site-main-info">
             <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
           </div>
-          <div class="site-details">
-            ${details}
-          </div>
+          <div class="site-details">${details}</div>
         </div>
       `;
 
-      return $('<li>')
-        .append(siteInfo)
-        .appendTo(ul);
+      return $('<li>').append(siteInfo).appendTo(ul);
     },
 
     updateCustomFields: function(siteData) {
-      console.log("Updating custom fields with:", siteData);
-      
       Object.entries(this.config.fieldMapping).forEach(([field, customFieldId]) => {
         const value = siteData[field];
-        if (typeof value === 'undefined' || value === null) return;
+        if (value == null) return;
 
-        const elementId = `issue_custom_field_values_${customFieldId}`;
-        const element = $(`#${elementId}`);
-        
-        if (element.length) {
-          console.log(`Updating field ${elementId} with value:`, value);
-          element
-            .val(value)
-            .trigger('change')
-            .trigger('blur')
-            .addClass('field-updated')
-            .delay(1000)
-            .queue(function(next) {
-              $(this).removeClass('field-updated');
-              next();
-            });
-        } else {
-          console.warn(`Element not found: ${elementId}`);
-        }
+        const element = $(`#issue_custom_field_values_${customFieldId}`);
+        if (!element.length) return;
+
+        element
+          .val(value)
+          .trigger('change')
+          .trigger('blur')
+          .addClass('field-updated')
+          .delay(1000)
+          .queue(function(next) {
+            $(this).removeClass('field-updated');
+            next();
+          });
       });
 
       this.showUpdateNotification();
     },
 
     showUpdateNotification: function() {
-      const notification = $('<div class="flash notice" style="display:none">')
+      $('<div class="flash notice" style="display:none">')
         .text('Campos actualizados correctamente')
-        .insertBefore('.sites-search-container');
-
-      notification
+        .insertBefore('.sites-search-container')
         .slideDown()
         .delay(3000)
         .slideUp(function() {
@@ -202,8 +166,7 @@
     },
 
     clearSearch: function() {
-      const searchField = $('#sites-search-field');
-      searchField
+      $('#sites-search-field')
         .val('')
         .trigger('input')
         .removeClass('has-value loading');
@@ -212,13 +175,10 @@
 
     clearCustomFields: function() {
       Object.values(this.config.fieldMapping).forEach(customFieldId => {
-        const element = $(`#issue_custom_field_values_${customFieldId}`);
-        if (element.length) {
-          element
-            .val('')
-            .trigger('change')
-            .removeClass('field-updated');
-        }
+        $(`#issue_custom_field_values_${customFieldId}`)
+          .val('')
+          .trigger('change')
+          .removeClass('field-updated');
       });
     },
 
@@ -230,8 +190,6 @@
     }
   };
 
-  $(document).ready(function() {
-    SitesManager.init();
-  });
+  $(document).ready(() => SitesManager.init());
 
 })(jQuery);
