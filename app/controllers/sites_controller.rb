@@ -6,7 +6,7 @@ class SitesController < ApplicationController
   before_action :find_site, only: [:show, :edit, :update, :destroy, :toggle_status]
   before_action :load_site_collections, only: [:new, :create, :edit, :update]
   before_action :build_site_query, only: [:index]
-  skip_before_action :verify_authenticity_token, only: [:search]
+  skip_before_action :verify_authenticity_token, only: [:search, :autocomplete]
   before_action :verify_sites_manager_access, except: [:search, :autocomplete]
 
 
@@ -166,45 +166,16 @@ class SitesController < ApplicationController
     return render json: { error: 'Unauthorized' }, status: :unauthorized unless User.current.logged?
 
     begin
-      term = params[:term].to_s.strip.downcase
-      @sites = FlmSite.where(
-        "LOWER(s_id) LIKE :term OR 
-         LOWER(nom_sitio) LIKE :term OR 
-         LOWER(identificador) LIKE :term OR 
-         LOWER(municipio) LIKE :term OR 
-         LOWER(direccion) LIKE :term OR 
-         LOWER(depto) LIKE :term", 
-        term: "%#{term}%"
-      ).limit(10)
-
-      results = @sites.map { |site| 
-        {
-          id: site.id,
-          label: "#{site.s_id} - #{site.nom_sitio}",
-          value: site.nom_sitio,
-          site_data: {
-            s_id: site.s_id,
-            nom_sitio: site.nom_sitio,
-            identificador: site.identificador,
-            depto: site.depto,
-            municipio: site.municipio,
-            direccion: site.direccion,
-            jerarquia_definitiva: site.jerarquia_definitiva,
-            fijo_variable: site.fijo_variable,
-            coordinador: site.coordinador,
-            electrificadora: site.electrificadora,
-            nic: site.nic,
-            zona_operativa: site.zona_operativa
-          }
-        }
-      }
-
+      @sites = build_search_scope
+      results = format_sites_for_json(@sites)
+      
       render json: results
     rescue => e
       Rails.logger.error "Error en búsqueda de sitios: #{e.message}\n#{e.backtrace.join("\n")}"
       render json: { error: e.message }, status: :internal_server_error
     end
   end
+
 
   # Agregar acción de autocompletado como alternativa
   def autocomplete
@@ -334,8 +305,8 @@ class SitesController < ApplicationController
     ).limit(10)
   end
 
- def format_sites_for_json(sites)
-    sites.map { |site| 
+  def format_sites_for_json(sites)
+    sites.map do |site|
       {
         id: site.id,
         label: "#{site.s_id} - #{site.nom_sitio}",
@@ -352,10 +323,12 @@ class SitesController < ApplicationController
           coordinador: site.coordinador,
           electrificadora: site.electrificadora,
           nic: site.nic,
-          zona_operativa: site.zona_operativa
+          zona_operativa: site.zona_operativa,
+          campo_adicional_4: site.campo_adicional_4,
+          campo_adicional_5: site.campo_adicional_5
         }
       }
-    }
+    end
   end
   
 
@@ -375,20 +348,16 @@ class SitesController < ApplicationController
   end
 
   def build_search_scope
-    scope = FlmSite.active
-
-    if params[:term].present?
-      term = "%#{params[:term].strip.downcase}%"
-      scope = scope.where(
-        "LOWER(s_id) LIKE :term OR LOWER(nom_sitio) LIKE :term OR LOWER(identificador) LIKE :term",
-        term: term
-      )
-    end
-
-    scope = scope.by_depto(params[:depto]) if params[:depto].present?
-    scope = scope.by_municipio(params[:municipio]) if params[:municipio].present?
-
-    scope
+    term = params[:term].to_s.strip.downcase
+    FlmSite.where(
+      "LOWER(s_id) LIKE :term OR 
+       LOWER(nom_sitio) LIKE :term OR 
+       LOWER(identificador) LIKE :term OR 
+       LOWER(municipio) LIKE :term OR 
+       LOWER(direccion) LIKE :term OR 
+       LOWER(depto) LIKE :term", 
+      term: "%#{term}%"
+    ).limit(10)
   end
 
   def import_sites_from_file
