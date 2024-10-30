@@ -58,7 +58,6 @@
       const searchField = $('#sites-search-field');
       if (!searchField.length) return;
   
-      // Destruir el autocompletado si ya existe y loggear el proceso
       if (searchField.data('uiAutocomplete')) {
           console.log("Destroying previous autocomplete instance...");
           searchField.autocomplete('destroy');
@@ -75,15 +74,15 @@
                   method: 'GET',
                   data: { term: request.term },
                   success: function(data) {
-                      console.log("Autocomplete data received:", data);
+                      console.log("Autocomplete data received:", data); // Log de la respuesta
                       response(data.slice(0, SitesManager.config.maxResults).map(site => ({
                           label: `${site.s_id} - ${site.nom_sitio}`,
                           value: `${site.s_id} - ${site.nom_sitio}`,
                           site_data: site
                       })));
                   },
-                  error: function() {
-                      console.error("Error fetching autocomplete data");
+                  error: function(xhr, status, error) {
+                      console.error("Error fetching autocomplete data:", error); // Log del error
                       response([]);
                   }
               });
@@ -106,6 +105,7 @@
               .appendTo(ul);
       };
   },
+  
   
 
     bindTrackerChangeEvent: function() {
