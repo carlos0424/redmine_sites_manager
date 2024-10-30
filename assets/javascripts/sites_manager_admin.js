@@ -23,6 +23,7 @@
     },
 
     init: function() {
+      console.log("Initializing SitesManager...");
       this.initializeSearchField();
       this.initializeAutocomplete();
       this.bindTrackerChangeEvent();
@@ -30,8 +31,12 @@
 
     initializeSearchField: function() {
       const searchField = $('#sites-search-field');
-      if (!searchField.length) return;
+      if (!searchField.length) {
+        console.log("Search field not found!");
+        return;
+      }
 
+      console.log("Initializing search field...");
       searchField.attr('placeholder', SitesManager.translations?.placeholder);
 
       const clearBtn = $('.sites-clear-btn');
@@ -51,24 +56,31 @@
 
     initializeAutocomplete: function() {
       const searchField = $('#sites-search-field');
-      if (!searchField.length) return;
+      if (!searchField.length) {
+        console.log("Search field for autocomplete not found!");
+        return;
+      }
 
+      console.log("Initializing autocomplete...");
       searchField.autocomplete({
         source: function(request, response) {
           if (request.term.length < SitesManager.config.searchMinChars) return;
 
+          console.log("Sending search request for term:", request.term);
           $.ajax({
             url: '/sites/search',
             method: 'GET',
             data: { term: request.term },
             success: function(data) {
+              console.log("Received search results:", data);
               response(data.slice(0, SitesManager.config.maxResults).map(site => ({
                 label: `${site.s_id} - ${site.nom_sitio}`,
                 value: `${site.s_id} - ${site.nom_sitio}`,
                 site_data: site
               })));
             },
-            error: function() {
+            error: function(xhr, status, error) {
+              console.error("Error in search request:", error);
               response([]);
             }
           });
@@ -76,6 +88,7 @@
         minLength: SitesManager.config.searchMinChars,
         select: function(event, ui) {
           if (ui.item) {
+            console.log("Selected site:", ui.item.site_data);
             SitesManager.updateCustomFields(ui.item.site_data);
           }
           return false;
@@ -93,12 +106,15 @@
 
     bindTrackerChangeEvent: function() {
       // Detectar cambio de tracker y reinicializar el campo de búsqueda
+      console.log("Binding tracker change event...");
       $('#issue_tracker_id').on('change', function() {
+        console.log("Tracker changed, reinitializing autocomplete...");
         SitesManager.initializeAutocomplete();
       });
     },
 
     updateCustomFields: function(siteData) {
+      console.log("Updating custom fields with site data:", siteData);
       Object.entries(this.config.customFieldsMapping).forEach(([field, fieldId]) => {
         const element = $(`#issue_custom_field_values_${fieldId}`);
         if (element.length && siteData[field]) {
@@ -108,6 +124,7 @@
     },
 
     clearCustomFields: function() {
+      console.log("Clearing custom fields...");
       Object.entries(this.config.customFieldsMapping).forEach(([field, fieldId]) => {
         const element = $(`#issue_custom_field_values_${fieldId}`);
         if (element.length) {
@@ -119,6 +136,7 @@
 
   // Inicializar cuando el documento está listo
   $(document).ready(function() {
+    console.log("Document ready, initializing SitesManager...");
     SitesManager.init();
   });
 

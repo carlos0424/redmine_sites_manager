@@ -1,115 +1,142 @@
-// assets/javascripts/sites_dynamic_search.js
 (function($) {
   'use strict';
 
-  var SitesManager = {
+  window.SitesManagerDynamic = {
     init: function() {
-      this.searchField = $('#sites-search-field');
-      if (!this.searchField.length) return;
-
-      this.clearBtn = $('.sites-clear-btn');
-      this.setupAutocomplete();
-      this.setupClearButton();
-      this.handleVisibility();
+      this.initializeSearch();
+      this.bindEvents();
     },
 
-    setupAutocomplete: function() {
-      var self = this;
-      var fieldMapping = JSON.parse(this.searchField.data('mapping'));
+    bindEvents: function() {
+      // Manejar cambio de tracker
+      $(document).on('change', '#issue_tracker_id', () => {
+        this.resetSearchField(); // Limpiar campo de búsqueda al cambiar tracker
+        setTimeout(() => this.initializeSearch(), 500); // Re-inicializar búsqueda
+      });
 
-      this.searchField.autocomplete({
-        source: function(request, response) {
+      // Manejar el botón de limpiar
+      $(document).on('click', '.sites-clear-btn', () => {
+        const $searchField = $('#sites-search-field');
+        $searchField.val('').trigger('input').focus();
+        this.clearFields();
+      });
+
+      // Mostrar/ocultar botón de limpiar
+      $(document).on('input', '#sites-search-field', function() {
+        const $clearBtn = $('.sites-clear-btn');
+        $clearBtn.toggle(Boolean($(this).val()));
+      });
+    },
+
+    initializeSearch: function() {
+      const $searchField = $('#sites-search-field');
+      if (!$searchField.length) return;
+
+      // Resetear autocompletado si existe
+      if ($searchField.data('uiAutocomplete')) {
+        $searchField.autocomplete('destroy');
+      }
+
+      // Inicializar autocompletado
+      $searchField.autocomplete({
+        source: (request, response) => {
           $.ajax({
             url: '/sites/search',
             method: 'GET',
-            data: { term: request.term },
-            success: function(data) {
+            data: { 
+              term: request.term,
+              authenticity_token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: (data) => {
               response(data);
             },
-            error: function(xhr, status, error) {
+            error: (xhr, status, error) => {
               console.error('Error en búsqueda:', error);
               response([]);
             }
           });
         },
         minLength: 2,
-        select: function(event, ui) {
+        select: (event, ui) => {
           if (ui.item) {
-            self.updateCustomFields(ui.item.site_data, fieldMapping);
+            this.updateFields(ui.item.site_data);
             return false;
           }
+        },
+        response: (event, ui) => {
+          if (!ui.content.length) {
+            const noResult = { label: 'No se encontraron resultados' };
+            ui.content.push(noResult);
+          }
         }
-      }).autocomplete('instance')._renderItem = function(ul, item) {
+      }).autocomplete('instance')._renderItem = (ul, item) => {
+        if (!item.site_data) {
+          return $('<li>')
+            .append(`<div class="ui-menu-item-wrapper">${item.label}</div>`)
+            .appendTo(ul);
+        }
+
         return $('<li>')
           .append(`
             <div class="ui-menu-item-wrapper">
-              <div class="site-result">
-                <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
-                <small>
-                  ${item.site_data.municipio || ''}
-                  ${item.site_data.direccion ? ` - ${item.site_data.direccion}` : ''}
-                </small>
-              </div>
+              <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
+              <br>
+              <small>${item.site_data.municipio || ''} ${item.site_data.direccion ? '- ' + item.site_data.direccion : ''}</small>
             </div>
           `)
           .appendTo(ul);
       };
+
+      // Inicializar estado del botón de limpiar
+      const $clearBtn = $('.sites-clear-btn');
+      $clearBtn.toggle(Boolean($searchField.val()));
     },
 
-    setupClearButton: function() {
-      var self = this;
+    resetSearchField: function() {
+      $('#sites-search-field').val(''); // Limpiar el campo de búsqueda
+    },
+
+    updateFields: function(siteData) {
+      if (!siteData) return;
       
-      this.clearBtn.on('click', function() {
-        self.searchField.val('').trigger('input');
-        self.clearCustomFields();
-      });
+      const fieldMapping = {
+        1: 's_id',
+        5: 'nom_sitio',
+        8: 'identificador',
+        10: 'depto',
+        2: 'municipio',
+        3: 'direccion',
+        6: 'jerarquia_definitiva',
+        7: 'fijo_variable',
+        9: 'coordinador',
+        25: 'electrificadora',
+        26: 'nic',
+        32: 'zona_operativa'
+      };
 
-      this.searchField.on('input', function() {
-        self.clearBtn.toggle(Boolean($(this).val()));
-      }).trigger('input');
-    },
-
-    handleVisibility: function() {
-      var container = $('.sites-search-container');
-      var currentStatus = $('#issue_status_id').val();
-      var isNewIssue = !$('#issue_id').val();
-
-      // Mostrar solo en nuevo issue o estados permitidos
-      var shouldShow = isNewIssue || currentStatus === '1';
-      container.toggle(shouldShow);
-
-      // Actualizar visibilidad cuando cambie el estado
-      $('#issue_status_id').on('change', function() {
-        container.toggle(isNewIssue || $(this).val() === '1');
-      });
-    },
-
-    updateCustomFields: function(siteData, fieldMapping) {
-      Object.entries(fieldMapping).forEach(function([siteField, customFieldId]) {
-        if (!siteData[siteField] || !customFieldId) return;
+      Object.entries(fieldMapping).forEach(([fieldId, field]) => {
+        if (!siteData[field]) return;
         
-        var field = $(`#issue_custom_field_values_${customFieldId}`);
-        if (!field.length) return;
+        const element = $(`#issue_custom_field_values_${fieldId}`);
+        if (!element.length) return;
 
-        field.val(siteData[siteField]).trigger('change');
-        
-        // Manejar estilos especiales para fijo/variable
-        if (siteField === 'fijo_variable') {
-          field
-            .removeClass('campo-variable campo-fijo')
-            .addClass(siteData[siteField].toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
+        element
+          .val(siteData[field])
+          .trigger('change')
+          .removeClass('campo-variable campo-fijo');
+
+        if (field === 'fijo_variable') {
+          element.addClass(siteData[field].toLowerCase() === 'variable' ? 'campo-variable' : 'campo-fijo');
         }
       });
     },
 
-    clearCustomFields: function() {
-      var fieldMapping = JSON.parse(this.searchField.data('mapping'));
-      Object.values(fieldMapping).forEach(function(customFieldId) {
-        if (!customFieldId) return;
-        
-        var field = $(`#issue_custom_field_values_${customFieldId}`);
-        if (field.length) {
-          field
+    clearFields: function() {
+      const fieldIds = [1, 5, 8, 10, 2, 3, 6, 7, 9, 25, 26, 32];
+      fieldIds.forEach(fieldId => {
+        const element = $(`#issue_custom_field_values_${fieldId}`);
+        if (element.length) {
+          element
             .val('')
             .trigger('change')
             .removeClass('campo-variable campo-fijo');
@@ -118,16 +145,14 @@
     }
   };
 
-  // Inicializar cuando el documento esté listo
   $(document).ready(function() {
-    SitesManager.init();
-  });
+    SitesManagerDynamic.init();
 
-  // Reinicializar cuando se cargue contenido dinámico
-  $(document).ajaxComplete(function(event, xhr, settings) {
-    if (settings.url.includes('issues/new') || settings.url.includes('issues/edit')) {
-      SitesManager.init();
-    }
+    $(document).ajaxComplete(function(event, xhr, settings) {
+      if (settings.url.includes('issues/new') || settings.url.includes('issues/edit')) {
+        SitesManagerDynamic.init();
+      }
+    });
   });
 
 })(jQuery);
