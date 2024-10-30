@@ -2,7 +2,8 @@
 <div class="contextual">
   <%= link_to l('plugin_sites_manager.sites.download_template'), 
               download_template_sites_path,
-              class: 'icon icon-download button' %>
+              class: 'icon icon-download button',
+              data: { turbolinks: false } %>
 </div>
 
 <h2><%= l('plugin_sites_manager.sites.import') %></h2>
@@ -11,7 +12,14 @@
   <div class="import-instructions">
     <h3><%= l('plugin_sites_manager.sites.instructions') %></h3>
     <ol>
-      <li><%= l('plugin_sites_manager.sites.instruction_template') %></li>
+      <li>
+        <%= l('plugin_sites_manager.sites.instruction_template') %>
+        <span class="template-link">
+          (<%= link_to l('plugin_sites_manager.sites.download_template_here'),
+                      download_template_sites_path,
+                      data: { turbolinks: false } %>)
+        </span>
+      </li>
       <li><%= l('plugin_sites_manager.sites.instruction_fill') %></li>
       <li><%= l('plugin_sites_manager.sites.instruction_save') %></li>
       <li><%= l('plugin_sites_manager.sites.instruction_upload') %></li>
@@ -52,27 +60,71 @@
   <style>
     .import-instructions {
       margin-bottom: 2em;
-      padding: 1em;
+      padding: 1.5em;
       background-color: #f9f9f9;
       border: 1px solid #e0e0e0;
       border-radius: 3px;
     }
+    
     .import-instructions ol {
       margin-left: 1.5em;
+      list-style-type: decimal;
+      margin-bottom: 1em;
     }
+    
     .import-instructions li {
-      margin-bottom: 0.5em;
+      margin-bottom: 0.8em;
+      line-height: 1.4;
     }
+    
+    .template-link {
+      margin-left: 0.5em;
+      color: #666;
+    }
+    
+    .import-form {
+      margin-top: 2em;
+    }
+    
+    .file-input {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      width: 100%;
+      max-width: 500px;
+    }
+    
     .import-spinner {
       margin-left: 1em;
-      animation: spin 2s linear infinite;
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
-    @keyframes spin {
-      100% { transform: rotate(360deg); }
+    
+    .flash.notice {
+      margin-top: 1.5em;
+      padding: 1em;
+      border-radius: 3px;
     }
+    
     .flash.notice ul {
-      margin-left: 1.5em;
+      margin: 0.5em 0 0 1.5em;
       list-style-type: disc;
+    }
+    
+    .form-actions {
+      margin-top: 1.5em;
+      padding-top: 1em;
+      border-top: 1px solid #eee;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 <% end %>

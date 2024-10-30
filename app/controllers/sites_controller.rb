@@ -278,4 +278,74 @@ class SitesController < ApplicationController
       :nic, :zona_operativa, :campo_adicional_4, :campo_adicional_5
     )
   end
+
+  def download_template
+    begin
+      csv_data = generate_template
+      send_data add_bom(csv_data),
+                filename: "plantilla_sitios_#{Date.today.strftime('%Y%m%d')}.csv",
+                type: 'text/csv; charset=utf-8',
+                disposition: 'attachment'
+    rescue StandardError => e
+      Rails.logger.error "Error generando plantilla: #{e.message}"
+      flash[:error] = l('plugin_sites_manager.messages.template_generation_error')
+      redirect_to import_sites_path
+    end
+  end
+  
+  private
+  
+  def generate_template
+    require 'csv'
+    
+    CSV.generate(col_sep: ';', encoding: 'utf-8') do |csv|
+      # Encabezados
+      csv << template_headers
+  
+      # Fila de ejemplo
+      csv << template_example_row
+    end
+  end
+  
+  def template_headers
+    [
+      'S ID (*)',
+      'Departamento',
+      'Municipio',
+      'Nombre Sitio (*)',
+      'Dirección',
+      'Identificador',
+      'Jerarquía Definitiva',
+      'Fijo/Variable',
+      'Coordinador',
+      'Electrificadora',
+      'NIC',
+      'zona_operativa',
+      'Campo Adicional 4',
+      'Campo Adicional 5'
+    ]
+  end
+  
+  def template_example_row
+    [
+      'S001',
+      'ANTIOQUIA',
+      'MEDELLÍN',
+      'SITIO EJEMPLO',
+      'CALLE 123',
+      'ID001',
+      'B_1',
+      'FIJO',
+      'JUAN PEREZ',
+      'EPM',
+      '12345',
+      'VALOR 3',
+      'VALOR 4',
+      'VALOR 5'
+    ]
+  end
+  
+  def add_bom(csv_data)
+    "\xEF\xBB\xBF" + csv_data.force_encoding('UTF-8')
+  end
 end
