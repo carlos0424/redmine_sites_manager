@@ -56,53 +56,57 @@
 
     initializeAutocomplete: function() {
       const searchField = $('#sites-search-field');
-      if (!searchField.length) {
-        console.log("Search field for autocomplete not found!");
-        return;
+      if (!searchField.length) return;
+  
+      // Destruir el autocompletado si ya existe y loggear el proceso
+      if (searchField.data('uiAutocomplete')) {
+          console.log("Destroying previous autocomplete instance...");
+          searchField.autocomplete('destroy');
       }
-
+  
       console.log("Initializing autocomplete...");
       searchField.autocomplete({
-        source: function(request, response) {
-          if (request.term.length < SitesManager.config.searchMinChars) return;
-
-          console.log("Sending search request for term:", request.term);
-          $.ajax({
-            url: '/sites/search',
-            method: 'GET',
-            data: { term: request.term },
-            success: function(data) {
-              console.log("Received search results:", data);
-              response(data.slice(0, SitesManager.config.maxResults).map(site => ({
-                label: `${site.s_id} - ${site.nom_sitio}`,
-                value: `${site.s_id} - ${site.nom_sitio}`,
-                site_data: site
-              })));
-            },
-            error: function(xhr, status, error) {
-              console.error("Error in search request:", error);
-              response([]);
-            }
-          });
-        },
-        minLength: SitesManager.config.searchMinChars,
-        select: function(event, ui) {
-          if (ui.item) {
-            console.log("Selected site:", ui.item.site_data);
-            SitesManager.updateCustomFields(ui.item.site_data);
+          source: function(request, response) {
+              console.log("Autocomplete source triggered with term:", request.term);
+              if (request.term.length < SitesManager.config.searchMinChars) return;
+  
+              $.ajax({
+                  url: '/sites/search',
+                  method: 'GET',
+                  data: { term: request.term },
+                  success: function(data) {
+                      console.log("Autocomplete data received:", data);
+                      response(data.slice(0, SitesManager.config.maxResults).map(site => ({
+                          label: `${site.s_id} - ${site.nom_sitio}`,
+                          value: `${site.s_id} - ${site.nom_sitio}`,
+                          site_data: site
+                      })));
+                  },
+                  error: function() {
+                      console.error("Error fetching autocomplete data");
+                      response([]);
+                  }
+              });
+          },
+          minLength: SitesManager.config.searchMinChars,
+          select: function(event, ui) {
+              if (ui.item) {
+                  console.log("Autocomplete item selected:", ui.item);
+                  SitesManager.updateCustomFields(ui.item.site_data);
+              }
+              return false;
           }
-          return false;
-        }
       }).autocomplete("instance")._renderItem = function(ul, item) {
-        return $("<li>")
-          .append(`<div class="autocomplete-item">
-                    <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
-                    <br>
-                    <small>${item.site_data.municipio || ''} ${item.site_data.direccion ? '- ' + item.site_data.direccion : ''}</small>
-                  </div>`)
-          .appendTo(ul);
+          return $("<li>")
+              .append(`<div class="autocomplete-item">
+                        <strong>${item.site_data.s_id} - ${item.site_data.nom_sitio}</strong>
+                        <br>
+                        <small>${item.site_data.municipio || ''} ${item.site_data.direccion ? '- ' + item.site_data.direccion : ''}</small>
+                      </div>`)
+              .appendTo(ul);
       };
-    },
+  },
+  
 
     bindTrackerChangeEvent: function() {
       // Detectar cambio de tracker y reinicializar el campo de búsqueda
