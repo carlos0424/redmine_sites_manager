@@ -2,138 +2,255 @@
 .site-form .form-field {
   margin-bottom: 1em;
 }
+
 .sites-search-container {
   position: relative;
   margin-bottom: 15px;
+  max-width: 600px;
 }
 
 .sites-autocomplete {
   width: 100%;
-  padding: 6px 30px 6px 8px;
+  padding: 10px 35px 10px 12px;
   border: 1px solid #ccc;
-  border-radius: 3px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.4;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fff;
 }
 
-.clear-site-search {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #666;
-  padding: 4px;
+.sites-autocomplete:focus {
+  border-color: #2996cc;
+  box-shadow: 0 0 0 2px rgba(41, 150, 204, 0.1);
+  outline: none;
 }
 
-.clear-site-search:hover {
-  color: #333;
-}
-
-.ui-autocomplete {
-  max-height: 300px;
-  overflow-y: auto;
-  z-index: 1000;
-  border: 1px solid #ccc;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.autocomplete-item {
-  padding: 5px 8px;
-}
-
-.autocomplete-item strong {
-  display: block;
-  color: #333;
-}
-
-.autocomplete-item small {
-  color: #666;
-  font-size: 0.9em;
-}
 .site-search-wrapper {
   position: relative;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   margin-bottom: 10px;
 }
 
 .site-search-wrapper label {
   display: block;
   font-weight: bold;
-  font-size: 12px;
+  font-size: 13px;
   color: #333;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 #sites-search-field {
   width: 100%;
-  padding: 8px 32px 8px 8px; /* Espacio para el ícono de limpieza */
+  padding: 10px 35px 10px 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
+  line-height: 1.4;
 }
 
 .sites-clear-btn {
   position: absolute;
   right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
   color: #999;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
 }
 
 .sites-clear-btn:hover {
-  color: #555;
+  color: #333;
+  background-color: #f0f0f0;
 }
 
 .sites-clear-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
+/* Mejoras en el autocompletado */
+.ui-autocomplete {
+  max-height: 350px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1000 !important;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  padding: 4px 0;
+}
+
+.ui-menu-item {
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #eee;
+}
+
+.ui-menu-item:last-child {
+  border-bottom: none;
+}
+
+.ui-menu-item-wrapper {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.site-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.site-main-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.site-main-info strong {
+  color: #333;
+  font-size: 14px;
+}
+
+.site-details {
+  display: flex;
+  gap: 8px;
+  color: #666;
+  font-size: 12px;
+}
+
+.site-details span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ui-menu-item-wrapper.ui-state-active,
+.ui-menu-item-wrapper:hover {
+  background-color: #f5f5f5;
+  border: none;
+  margin: 0;
+}
+
+/* Estilos para campos específicos */
+.campo-fijo {
+  background-color: #e8f5e9 !important;
+  border-color: #4caf50 !important;
+}
+
+.campo-variable {
+  background-color: #fff3cd !important;
+  border-color: #ffc107 !important;
+}
+
+/* Estilos para el formulario de importación */
 .import-form {
   max-width: 800px;
   margin: 0 auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .file-input {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
+  padding: 12px;
+  border: 2px dashed #ccc;
+  border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.file-input:hover {
+  border-color: #2996cc;
 }
 
 .import-instructions {
-  background: #f9f9f9;
-  padding: 15px;
+  background: #f8f9fa;
+  padding: 20px;
   margin: 20px 0;
-  border-radius: 4px;
-  border: 1px solid #ddd;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
 }
 
 .import-instructions h3 {
-  color: #333;
-  margin-bottom: 10px;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 16px;
 }
 
 .import-instructions ul {
   list-style-type: disc;
   margin-left: 20px;
+  line-height: 1.6;
 }
 
 .form-actions {
-  margin-top: 20px;
+  margin-top: 25px;
   text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .button-positive {
-  margin-left: 10px;
+  background-color: #2996cc;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
+
+.button-positive:hover {
+  background-color: #217ab7;
+}
+
+/* Mejoras en los iconos */
 .icon-export {
   background-image: url(../images/export.png);
-  padding-left: 20px;
+  background-repeat: no-repeat;
+  background-position: left center;
+  padding-left: 24px;
 }
 
 .contextual .icon-export {
-  margin-left: 5px;
+  margin-left: 8px;
+}
+
+/* Estilos para estados de carga */
+.loading {
+  position: relative;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  right: 35px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #2996cc;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
 }
