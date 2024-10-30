@@ -148,11 +148,11 @@
             <span class="municipio">
               <i class="icon icon-location"></i>${item.site_data.municipio || ''}
             </span>
-            <span class="nom_sitio">
-              <i class="icon icon-location"></i>${item.site_data.nom_sitio || ''}
+            <span class="identificador">
+              <i class="icon icon-location"></i>${item.site_data.identificador || ''}
             </span>
-            <span class="coordinador">
-              <i class="icon icon-user"></i>${item.site_data.coordinador || ''}
+            <span class="fijo_variable">
+              <i class="icon icon-user"></i>${item.site_data.fijo_variable || ''}
             </span>
           </div>
         </div>
