@@ -40,7 +40,7 @@ es:
       export_tooltip: "Exportar todos los sitios a CSV"
       export_success: "Sitios exportados exitosamente"
       export_empty: "No hay sitios para exportar"
-      download_template_here:"Descargar Plantilla"
+      download_template_here: "Descargar Plantilla"
       
       # Instrucciones de importación
       instructions: "Instrucciones de Importación"
