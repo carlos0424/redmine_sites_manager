@@ -1,29 +1,32 @@
+# lib/redmine_sites_manager/hooks.rb
 module RedmineSitesManager
   class Hooks < Redmine::Hook::ViewListener
-    # Incluir CSS y JS en el header de todas las páginas
-    def view_layouts_base_html_head(context = {})
+    def view_layouts_base_html_head(context={})
+      return unless should_include_assets?(context)
+      
       stylesheet = stylesheet_link_tag('sites_manager', plugin: 'redmine_sites_manager')
       javascript = javascript_include_tag('sites_manager_admin', plugin: 'redmine_sites_manager')
-      "#{stylesheet}\n#{javascript}".html_safe
+      javascript_include_tag('jquery-ui.min', plugin: 'redmine_sites_manager') +
+      stylesheet +
+      javascript
     end
 
-    # Hook para agregar el campo de búsqueda de sitios en el formulario de incidencias
-    def view_issues_form_details_top(context = {})
+    def view_issues_form_details_top(context={})
+      return '' unless show_site_search?(context[:issue])
+      
       html = <<-HTML
         <div class="sites-search-container">
           <p class="site-search-wrapper">
             <label>#{l('plugin_sites_manager.sites.search_label')}</label>
-            <input type="text" 
-                   id="sites-search-field" 
-                   class="sites-autocomplete ui-autocomplete-input" 
-                   placeholder="#{l('plugin_sites_manager.search.placeholder')}" 
-                   autocomplete="off" />
-            <span class="sites-clear-btn" 
-                  title="#{l('plugin_sites_manager.sites.clear_selection')}">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-  <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-            </span>
+            <div class="search-input-wrapper">
+              <input type="text" 
+                     id="sites-search-field" 
+                     class="sites-autocomplete" 
+                     placeholder="#{l('plugin_sites_manager.search.placeholder')}" 
+                     autocomplete="off" />
+              <span class="sites-clear-btn" 
+                    title="#{l('plugin_sites_manager.sites.clear_selection')}">×</span>
+            </div>
           </p>
         </div>
       HTML
@@ -31,73 +34,23 @@ module RedmineSitesManager
       html.html_safe
     end
 
-    # Hook para agregar JS específico en ciertas páginas
-    def view_layouts_base_body_bottom(context = {})
-      return unless should_include_js?(context)
-      
-      javascript_tag <<-JS
-        $(document).ready(function() {
-          window.sitesManagerSettings = {
-            searchUrl: '#{sites_search_url}',
-            customFieldMappings: #{get_custom_field_mappings.to_json},
-            translations: #{get_translations.to_json},
-            fieldMapping: #{get_field_mapping.to_json}
-          };
-          
-          if (typeof initializeSitesSearch !== 'undefined') {
-            initializeSitesSearch();
-          }
-        });
-      JS
-    end
-
     private
 
-    def sites_search_url
-      url_for(controller: 'sites', action: 'search', format: 'json', only_path: true)
-    end
-
-    def get_custom_field_mappings
-      Setting.plugin_redmine_sites_manager['custom_fields_mapping'] || {}
-    end
-
-    def get_field_mapping
-      {
-        1 => 's_id',
-        5 => 'nom_sitio',
-        8 => 'identificador',
-        10 => 'depto',
-        2 => 'municipio',
-        3 => 'direccion',
-        6 => 'jerarquia_definitiva',
-        7 => 'fijo_variable',
-        9 => 'coordinador',
-        25 => 'electrificadora',
-        26 => 'nic',
-        32 => 'zona_operativa'
-      }
-    end
-
-    def get_translations
-      {
-        noResults: l('plugin_sites_manager.search.no_results'),
-        searching: l('plugin_sites_manager.search.searching'),
-        placeholder: l('plugin_sites_manager.search.placeholder'),
-        clearSelection: l('plugin_sites_manager.sites.clear_selection')
-      }
-    end
-
-    def should_include_js?(context)
+    def should_include_assets?(context)
       return false unless context[:controller]
-      return false unless context[:controller].is_a?(IssuesController)
+      controller = context[:controller]
       
-      # Incluir JS en todas las acciones relevantes del controlador de issues
-      %w[new create edit update].include?(context[:controller].action_name)
+      # Incluir assets solo en controladores relevantes
+      controller.is_a?(IssuesController) || 
+      controller.is_a?(SitesController)
     end
-  end
-  
-  # Registrar los hooks para assets
-  class SitesManagerHooks < Redmine::Hook::ViewListener
-    render_on :view_layouts_base_html_head, partial: 'sites_manager/html_head'
+
+    def show_site_search?(issue)
+      return true if issue.nil? || issue.new_record?
+      
+      # Permitir edición solo en estados específicos
+      allowed_statuses = Setting.plugin_redmine_sites_manager['allowed_statuses'] || ['1']
+      allowed_statuses.include?(issue.status_id.to_s)
+    end
   end
 end
