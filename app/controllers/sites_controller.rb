@@ -93,13 +93,46 @@ class SitesController < ApplicationController
   end
 
   def search
-    return unauthorized_error unless User.current.logged?
-
+    return render json: { error: 'Unauthorized' }, status: :unauthorized unless User.current.logged?
+  
     begin
-      @sites = search_sites(params[:term])
-      render json: format_sites_for_json(@sites)
-    rescue StandardError => e
-      log_error("Error en búsqueda de sitios", e)
+      term = params[:term].to_s.strip.downcase
+      @sites = FlmSite.where(
+        "LOWER(s_id) LIKE :term OR 
+         LOWER(nom_sitio) LIKE :term OR 
+         LOWER(identificador) LIKE :term OR 
+         LOWER(municipio) LIKE :term OR 
+         LOWER(direccion) LIKE :term OR 
+         LOWER(depto) LIKE :term", 
+        term: "%#{term}%"
+      ).order('CAST(REGEXP_REPLACE(s_id, \'[^0-9]\', \'\') AS INTEGER) ASC')  # Ordenamiento numérico del S ID
+      .limit(10)
+  
+      results = @sites.map { |site| 
+        {
+          id: site.id,
+          label: "#{site.s_id} - #{site.nom_sitio}",
+          value: site.nom_sitio,
+          site_data: {
+            s_id: site.s_id,
+            nom_sitio: site.nom_sitio,
+            identificador: site.identificador,
+            depto: site.depto,
+            municipio: site.municipio,
+            direccion: site.direccion,
+            jerarquia_definitiva: site.jerarquia_definitiva,
+            fijo_variable: site.fijo_variable,
+            coordinador: site.coordinador,
+            electrificadora: site.electrificadora,
+            nic: site.nic,
+            zona_operativa: site.zona_operativa
+          }
+        }
+      }
+  
+      render json: results
+    rescue => e
+      Rails.logger.error "Error en búsqueda de sitios: #{e.message}\n#{e.backtrace.join("\n")}"
       render json: { error: e.message }, status: :internal_server_error
     end
   end
